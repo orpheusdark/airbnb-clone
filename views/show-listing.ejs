@@ -1,23 +1,77 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= listing.title %> | Airbnb Clone</title>
-</head>
-<body>
-  <a href="/listings">← Back to all listings</a>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= listing.title %> | airbnb</title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <%- include("partials/navbar.ejs") %>
 
-  <h1><%= listing.title %></h1>
+    <main class="detail-page">
+      <a class="back-link" href="/listings">← Back to all stays</a>
 
-  <img
-    src="<%= listing.image %>"
-    alt="<%= listing.title %>"
-    width="500"
-  >
+      <header class="detail-heading">
+        <div>
+          <p class="eyebrow">YOUR NEXT STAY</p>
+          <h1><%= listing.title %></h1>
+          <p class="detail-location">
+            <span aria-hidden="true">⌖</span>
+            <%= listing.location %>, <%= listing.country %>
+          </p>
+        </div>
+        <p class="detail-price">
+          ₹<%= Number(listing.price).toLocaleString("en-IN") %>
+          <span>/ night</span>
+        </p>
+      </header>
 
-  <p><%= listing.description %></p>
-  <h2>₹<%= listing.price %> per night</h2>
-  <p><%= listing.location %>, <%= listing.country %></p>
-</body>
+      <section class="detail-gallery">
+        <img
+          src="<%= listing.image || 'https://placehold.co/1200x800?text=airbnb' %>"
+          alt="<%= listing.title %>"
+        />
+        <span class="gallery-label">PROPERTY GALLERY</span>
+      </section>
+
+      <section class="detail-content">
+        <article class="detail-description">
+          <p class="eyebrow">THE PROPERTY</p>
+          <h2>Make yourself at home.</h2>
+          <p><%= listing.description %></p>
+
+          <div class="detail-divider"></div>
+
+          <h3>Location</h3>
+          <p><%= listing.location %>, <%= listing.country %></p>
+        </article>
+
+        <aside class="booking-card">
+          <p class="booking-price">
+            ₹<%= Number(listing.price).toLocaleString("en-IN") %>
+            <span>/ night</span>
+          </p>
+
+          <div class="booking-note">
+            <span class="booking-dot"></span>
+            <span>Ready for your next getaway</span>
+          </div>
+
+          <button
+            class="booking-btn"
+            type="button"
+            disabled
+            title="Booking functionality is coming later"
+          >
+            Booking coming soon
+          </button>
+
+          <p class="booking-disclaimer">
+            This is a project demo. No reservation or payment is processed.
+          </p>
+        </aside>
+      </section>
+    </main>
+  </body>
 </html>

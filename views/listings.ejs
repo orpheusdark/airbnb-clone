@@ -1,39 +1,84 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>All Listings | Airbnb Clone</title>
+  <title>Explore Stays | Airbnb</title>
+  <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-  <h1>Explore Stays</h1>
+  <%- include("partials/navbar.ejs") %>
 
-  <a href="/listings/new">Add a new listing</a>
+  <main class="listings-page">
+    <section class="listings-heading">
+      <div>
+        <p class="eyebrow">YOUR NEXT GETAWAY</p>
+        <h1>Find a place to <span>belong.</span></h1>
+        <p class="page-description">
+          Discover places worth travelling for.
+        </p>
+      </div>
 
-  <% if (listings.length === 0) { %>
-    <p>No listings available yet.</p>
-  <% } %>
+      <a href="/listings/new" class="create-listing-btn">
+        + Add a property
+      </a>
+    </section>
 
-  <% listings.forEach((listing) => { %>
-    <article>
-      <h2><%= listing.title %></h2>
+    <% if (listings.length === 0) { %>
+      <section class="empty-state">
+        <h2>No stays listed yet</h2>
+        <p>Be the first to add a property.</p>
+        <a href="/listings/new">Create your first listing</a>
+      </section>
+    <% } else { %>
+      <section class="listing-grid">
+        <% listings.forEach((listing) => { %>
+          <article class="listing-card">
+            <a
+              class="listing-image-link"
+              href="/listings/<%= listing._id %>"
+              aria-label="View <%= listing.title %>"
+            >
+              <img
+                class="listing-image"
+                src="<%= listing.image || 'https://placehold.co/600x400?text=Airbnb' %>"
+                alt="<%= listing.title %>"
+                loading="lazy"
+              >
+              <span class="image-label">Airbnb PICK</span>
+            </a>
 
-      <img
-        src="<%= listing.image %>"
-        alt="<%= listing.title %>"
-        width="300"
-      >
+            <div class="listing-info">
+              <div class="listing-location">
+                <span><%= listing.location %>, <%= listing.country %></span>
+                <span class="location-dot">●</span>
+              </div>
 
-      <p><%= listing.description %></p>
-      <p>₹<%= listing.price %> per night</p>
-      <p><%= listing.location %>, <%= listing.country %></p>
-      <a href="/listings/<%= listing._id %>">
-  View details
-</a>
-    </article>
+              <h2><%= listing.title %></h2>
 
-    <hr>
-    
-  <% }) %>
+              <p class="listing-description">
+                <%= listing.description %>
+              </p>
+
+              <div class="listing-card-bottom">
+                <p class="listing-price">
+                  ₹<%= Number(listing.price).toLocaleString("en-IN") %>
+                  <span>/ night</span>
+                </p>
+
+                <a
+                  class="details-link"
+                  href="/listings/<%= listing._id %>"
+                >
+                  Explore <span aria-hidden="true">↗</span>
+                </a>
+              </div>
+            </div>
+          </article>
+        <% }); %>
+      </section>
+    <% } %>
+  </main>
 </body>
 </html>
