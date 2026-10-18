@@ -62,3 +62,69 @@ The project is being developed incrementally to understand the implementation ra
 - Commit working milestones to GitHub.
 - Never commit database credentials or other secrets.
 - Update completion statuses only after testing the relevant feature.
+
+## Milestone: Custom Airbnb Interface
+
+**Status:** Implemented; verify responsive behavior before marking the UI fully tested.
+
+### Work completed
+
+- Added Express static-file middleware to serve files from `public/`.
+- Created a custom CSS stylesheet.
+- Built a reusable navigation partial using EJS.
+- Designed the listing index with dynamically rendered property cards.
+- Added responsive grid layouts for desktop, tablet, and mobile screens.
+- Created a custom property creation form.
+- Built a property details page with image, location, description, and price.
+- Used EJS includes to reuse the navigation component.
+
+### Technical decisions
+
+- Used custom HTML and CSS rather than a prebuilt UI framework.
+- Kept database-driven content in EJS templates.
+- Used CSS Grid and Flexbox for layouts.
+- Used responsive media queries to adapt layouts to smaller screens.
+- Kept booking functionality disabled because booking logic has not been implemented.
+
+## Milestone: Server-Side Listing Validation
+
+**Status:** Implemented; test the listed edge cases before treating validation as complete.
+
+### Work completed
+
+- Validated required listing fields on the server.
+- Trimmed whitespace from submitted strings.
+- Added maximum-length checks for titles, descriptions, locations, and countries.
+- Validated non-negative numeric prices.
+- Added validation for optional HTTP/HTTPS image URLs.
+- Added error handling for Mongoose validation and casting errors.
+- Preserved redirects after successful listing creation.
+
+### Lessons learned
+
+Browser-side validation improves usability but cannot be trusted as the only validation layer. Requests can be submitted without using the browser form, so the server must independently validate incoming data.
+
+## Git and Repository Workflow
+
+- Initialized a local Git repository.
+- Connected the repository to GitHub.
+- Used `master` as the working branch.
+- Added `.env`, `cred.env`, and `node_modules/` to `.gitignore`.
+- Pushed the project to GitHub.
+- Committed the UI and validation milestone after reviewing the changes.
+
+### Security note
+
+Never commit database connection strings, API keys, passwords, or other secrets. If a credential is exposed publicly, rotate it.
+
+## Next Milestones
+
+1. Create consistent error pages for common HTTP errors.
+2. Improve validation feedback so users can correct invalid form input.
+3. Review and test all routes and edge cases.
+4. Implement authentication before introducing user-specific listing management.
+5. Add listing editing and deletion with appropriate authorization.
+6. Plan a booking workflow with date validation.
+7. Add automated tests and deployment configuration.
+
+Milestone status should be updated only after the relevant behavior has been tested.
