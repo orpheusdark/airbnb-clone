@@ -1,107 +1,89 @@
+
 require("dotenv").config();
 
 const express = require("express");
 const mongoose = require("mongoose");
 const Listing = require("./models/listing");
-const app = express();
 
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
+// View engine
 app.set("view engine", "ejs");
 
+// Reusable error page helper
+function renderError(res, statusCode, message) {
+  return res.status(statusCode).render("error.ejs", {
+    statusCode,
+    message,
+  });
+}
+
+// Home route
 app.get("/", (req, res) => {
   res.send("Airbnb Clone server is running");
 });
 
-const PORT = process.env.PORT || 3000;
-
-async function startServer() {
-  try {
-    if (!process.env.MONGODB_URI) {
-      throw new Error("MONGODB_URI is missing from your .env file");
-    }
-
-    await mongoose.connect(process.env.MONGODB_URI);
-    console.log("Connected to MongoDB Atlas");
-
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-  } catch (error) {
-    console.error("Startup failed:", error.message);
-    process.exit(1);
-  }
-}
+// New listing form
 app.get("/listings/new", (req, res) => {
   res.render("new-listing.ejs");
 });
+
+// Display all listings
 app.get("/listings", async (req, res) => {
   try {
     const listings = await Listing.find({});
-    res.render("listings.ejs", { listings });
+    return res.render("listings.ejs", { listings });
   } catch (error) {
     console.error("Error fetching listings:", error.message);
-    res.status(500).send("Could not load listings.");
+
+    return renderError(
+      res,
+      500,
+      "Could not load listings."
+    );
   }
 });
-// app.post("/listings", async (req, res) => {
-//   try {
-//     const { title, description, price, location, country, image } = req.body;
 
-//     // Basic server-side validation
-//     if (
-//       !title?.trim() ||
-//       !description?.trim() ||
-//       !location?.trim() ||
-//       !country?.trim() ||
-//       price === undefined ||
-//       price === "" ||
-//       !Number.isFinite(Number(price)) ||
-//       Number(price) < 0
-//     ) {
-//       return res.status(400).send("Please provide valid listing details.");
-//     }
-
-//     const listing = new Listing({
-//       title: title.trim(),
-//       description: description.trim(),
-//       price: Number(price),
-//       location: location.trim(),
-//       country: country.trim(),
-//       image: image?.trim() || undefined,
-//     });
-
-//     await listing.save();
-
-//     res.redirect("/listings");
-//   } catch (error) {
-//     console.error("Error creating listing:", error.message);
-//     res.status(500).send("Could not create listing.");
-//   }
-// });
-
-
+// Create a new listing
 app.post("/listings", async (req, res) => {
   try {
-    const { title, description, price, location, country, image } = req.body;
+    const {
+      title,
+      description,
+      price,
+      location,
+      country,
+      image,
+    } = req.body;
 
-    // 1. Check required fields
+    // 1. Validate required text fields
     if (
       typeof title !== "string" ||
       typeof description !== "string" ||
       typeof location !== "string" ||
       typeof country !== "string"
     ) {
-      return res.status(400).send("Invalid listing data.");
+      return renderError(
+        res,
+        400,
+        "Please provide valid listing details."
+      );
     }
 
+    // 2. Trim input values
     const cleanTitle = title.trim();
     const cleanDescription = description.trim();
     const cleanLocation = location.trim();
     const cleanCountry = country.trim();
-    const cleanImage = typeof image === "string" ? image.trim() : "";
+    const cleanImage =
+      typeof image === "string" ? image.trim() : "";
 
+    // 3. Validate required values and price
     if (
       !cleanTitle ||
       !cleanDescription ||
@@ -109,36 +91,56 @@ app.post("/listings", async (req, res) => {
       !cleanCountry ||
       price === undefined ||
       price === "" ||
+      typeof price !== "string" ||
       !Number.isFinite(Number(price)) ||
       Number(price) < 0
     ) {
-      return res.status(400).send("Please provide valid listing details.");
+      return renderError(
+        res,
+        400,
+        "Please provide valid listing details."
+      );
     }
 
-    // 2. Enforce reasonable field lengths
+    // 4. Enforce reasonable field lengths
     if (
       cleanTitle.length > 100 ||
       cleanDescription.length > 2000 ||
       cleanLocation.length > 100 ||
       cleanCountry.length > 100
     ) {
-      return res.status(400).send("One or more fields are too long.");
+      return renderError(
+        res,
+        400,
+        "One or more fields are too long."
+      );
     }
 
-    // 3. Validate an optional image URL
+    // 5. Validate optional image URL
     if (cleanImage) {
       try {
         const imageUrl = new URL(cleanImage);
 
-        if (!["http:", "https:"].includes(imageUrl.protocol)) {
-          return res.status(400).send("Image URL must use HTTP or HTTPS.");
+        if (
+          !["http:", "https:"].includes(imageUrl.protocol) ||
+          !imageUrl.hostname
+        ) {
+          return renderError(
+            res,
+            400,
+            "Image URL must be a valid HTTP or HTTPS URL."
+          );
         }
       } catch {
-        return res.status(400).send("Please enter a valid image URL.");
+        return renderError(
+          res,
+          400,
+          "Please enter a valid image URL."
+        );
       }
     }
 
-    // 4. Create and save the listing
+    // 6. Create and save the listing
     const listing = new Listing({
       title: cleanTitle,
       description: cleanDescription,
@@ -154,32 +156,90 @@ app.post("/listings", async (req, res) => {
   } catch (error) {
     console.error("Error creating listing:", error.message);
 
-    if (error.name === "ValidationError" || error.name === "CastError") {
-      return res.status(400).send("The submitted listing data is invalid.");
+    if (
+      error.name === "ValidationError" ||
+      error.name === "CastError"
+    ) {
+      return renderError(
+        res,
+        400,
+        "The submitted listing data is invalid."
+      );
     }
 
-    return res.status(500).send("Could not create listing.");
+    return renderError(
+      res,
+      500,
+      "Could not create the listing right now."
+    );
   }
 });
 
+// Display one listing
 app.get("/listings/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
+    // Validate MongoDB ObjectId format
     if (!mongoose.isValidObjectId(id)) {
-      return res.status(400).send("Invalid listing ID.");
+      return renderError(
+        res,
+        400,
+        "Invalid listing ID."
+      );
     }
 
     const listing = await Listing.findById(id);
 
+    // Handle valid IDs that do not exist
     if (!listing) {
-      return res.status(404).send("Listing not found.");
+      return renderError(
+        res,
+        404,
+        "Listing not found."
+      );
     }
 
-    res.render("show-listing.ejs", { listing });
+    return res.render("show-listing.ejs", { listing });
   } catch (error) {
     console.error("Error fetching listing:", error.message);
-    res.status(500).send("Could not load listing.");
+
+    return renderError(
+      res,
+      500,
+      "Could not load this listing right now."
+    );
   }
 });
+
+// Handle unknown routes (keep this after all routes)
+app.use((req, res) => {
+  return renderError(
+    res,
+    404,
+    "The page you are looking for does not exist."
+  );
+});
+
+// Start server only after MongoDB connects
+async function startServer() {
+  try {
+    if (!process.env.MONGODB_URI) {
+      throw new Error(
+        "MONGODB_URI is missing from your .env file"
+      );
+    }
+
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log("Connected to MongoDB Atlas");
+
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error("Startup failed:", error.message);
+    process.exit(1);
+  }
+}
+
 startServer();

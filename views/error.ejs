@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Error | Airbnb Clone</title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <%- include("partials/navbar.ejs") %>
+
+    <main class="error-page">
+      <p class="eyebrow">OOPS — SOMETHING WENT WRONG</p>
+      <h1><%= statusCode || 500 %></h1>
+      <h2><%= message || "We couldn't complete your request." %></h2>
+      <p class="error-description">
+        Try again, or return to the listings page.
+      </p>
+      <a href="/listings" class="error-home-link">Browse listings</a>
+    </main>
+  </body>
+</html>

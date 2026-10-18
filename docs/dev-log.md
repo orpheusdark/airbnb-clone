@@ -117,14 +117,31 @@ Browser-side validation improves usability but cannot be trusted as the only val
 
 Never commit database connection strings, API keys, passwords, or other secrets. If a credential is exposed publicly, rotate it.
 
-## Next Milestones
 
-1. Create consistent error pages for common HTTP errors.
-2. Improve validation feedback so users can correct invalid form input.
-3. Review and test all routes and edge cases.
-4. Implement authentication before introducing user-specific listing management.
-5. Add listing editing and deletion with appropriate authorization.
-6. Plan a booking workflow with date validation.
-7. Add automated tests and deployment configuration.
+## Milestone: Custom Error Handling
 
-Milestone status should be updated only after the relevant behavior has been tested.
+### Implemented
+- Added a reusable `renderError()` helper for rendering error pages.
+- Added custom error responses for invalid listing IDs.
+- Added a 404 response when a listing does not exist.
+- Added a fallback 404 page for unknown routes.
+- Updated listing creation validation to use the custom error template.
+- Added generic server-error messages to avoid exposing internal errors to users.
+- Kept server-side validation for required fields, field lengths, price, and image URLs.
+
+### Routes Covered
+- `GET /listings`
+- `POST /listings`
+- `GET /listings/:id`
+- Unknown routes
+
+### Learning Outcomes
+- Understood HTTP status codes 400, 404, and 500.
+- Practiced reusable Express response helpers.
+- Learned why unknown routes should be handled after application routes.
+- Improved error handling without exposing internal implementation details.
+
+### Current Limitations
+- No centralized Express error-handling middleware yet.
+- No automated tests for routes or validation.
+- No authentication, booking, or payment functionality.

@@ -136,3 +136,13 @@ An invalid ID and a nonexistent listing are different situations: the former is 
 9. Why should `.env` be excluded from Git?
 10. Why should authentication and authorization be implemented before allowing users to edit or delete listings?
 
+
+## Express Error Handling
+
+- `400 Bad Request`: The submitted input is invalid.
+- `404 Not Found`: The requested resource or route does not exist.
+- `500 Internal Server Error`: An unexpected server-side failure occurred.
+- `res.status(code).render(view, data)` sets the HTTP status and renders an EJS template.
+- A reusable helper reduces repeated response code.
+- The fallback 404 route must be registered after the application's regular routes.
+- Error messages shown to visitors should not reveal database connection strings, stack traces, or other internal details.
