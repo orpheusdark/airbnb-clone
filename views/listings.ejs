@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>All Listings | Airbnb Clone</title>
+</head>
+<body>
+  <h1>Explore Stays</h1>
+
+  <a href="/listings/new">Add a new listing</a>
+
+  <% if (listings.length === 0) { %>
+    <p>No listings available yet.</p>
+  <% } %>
+
+  <% listings.forEach((listing) => { %>
+    <article>
+      <h2><%= listing.title %></h2>
+
+      <img
+        src="<%= listing.image %>"
+        alt="<%= listing.title %>"
+        width="300"
+      >
+
+      <p><%= listing.description %></p>
+      <p>₹<%= listing.price %> per night</p>
+      <p><%= listing.location %>, <%= listing.country %></p>
+      <a href="/listings/<%= listing._id %>">
+  View details
+</a>
+    </article>
+
+    <hr>
+    
+  <% }) %>
+</body>
+</html>

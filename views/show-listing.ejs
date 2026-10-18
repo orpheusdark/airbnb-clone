@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= listing.title %> | Airbnb Clone</title>
+</head>
+<body>
+  <a href="/listings">← Back to all listings</a>
+
+  <h1><%= listing.title %></h1>
+
+  <img
+    src="<%= listing.image %>"
+    alt="<%= listing.title %>"
+    width="500"
+  >
+
+  <p><%= listing.description %></p>
+  <h2>₹<%= listing.price %> per night</h2>
+  <p><%= listing.location %>, <%= listing.country %></p>
+</body>
+</html>

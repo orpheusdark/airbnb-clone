@@ -1,0 +1,7 @@
+node_modules/
+.env
+cred.env
+# Environment variables and secrets
+.env
+cred.env
+node_modules/
