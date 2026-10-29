@@ -237,3 +237,12 @@ Never commit database connection strings, API keys, passwords, or other secrets.
 - Verified every visible property image loads and saved a final browser preview.
 - Confirmed the application is running locally, the repository is clean and the implementation commits are pushed.
 - Online payment activation still requires the user's Razorpay test keys; actual recovery email delivery requires SMTP configuration.
+
+## Razorpay activation — 29 October 2026
+
+- The user added their own Razorpay test key pair to the private local environment file.
+- Validated the configured key type without displaying either credential.
+- Used the server-side payment adapter to create a 100-paise INR test order successfully.
+- No payment, capture or money transfer was performed during this verification.
+- Restarted the local application so secure checkout loads the configured provider.
+- Provider order creation is now verified against the actual test account. A complete hosted-checkout payment and callback remains a separate end-to-end acceptance step.

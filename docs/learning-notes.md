@@ -199,3 +199,10 @@ An invalid ID and a nonexistent listing are different situations: the former is 
 - Establish the intended account, preview the records lacking owners, then apply an explicit assignment limited to those records.
 - Seed data with insert-only upserts so rerunning initialization does not overwrite existing properties or create duplicate entries for the same host/title.
 - Verify the result through both the owner's dashboard and the public browsing flow.
+
+## Activating provider credentials
+
+- Read keys from the private environment file and restart the server after changing them.
+- Validate the configured key type before making provider requests, and avoid printing credentials or authorization headers.
+- Creating an order verifies authentication and the order API; it does not itself make a payment.
+- Payment completion additionally requires hosted checkout, signature verification, amount/order checks and capture confirmation.
