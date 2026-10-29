@@ -192,3 +192,10 @@ An invalid ID and a nonexistent listing are different situations: the former is 
 - Bundle licensed category photos locally for reliable image delivery, and preserve host-provided URLs/uploads.
 - Record image sources and licensing separately from product marketing copy.
 - Keep the README focused on product capabilities, installation, architecture and operations; keep implementation decisions and explanations in the development log and technical notes.
+
+## Safe ownership migration
+
+- Existing data should not be assigned to whoever happens to register first.
+- Establish the intended account, preview the records lacking owners, then apply an explicit assignment limited to those records.
+- Seed data with insert-only upserts so rerunning initialization does not overwrite existing properties or create duplicate entries for the same host/title.
+- Verify the result through both the owner's dashboard and the public browsing flow.

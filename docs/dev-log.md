@@ -226,3 +226,14 @@ Never commit database connection strings, API keys, passwords, or other secrets.
 - Verified the compact search/category layout on desktop and the mobile layout without horizontal page overflow.
 - Removed the unused creation-only template in favor of the shared validated create/edit form.
 - Separated completed work into meaningful account/data, application-flow, and documentation commits with plain-language messages.
+
+## Account ownership and local acceptance
+
+- The user created their own host account directly through signup; no password was requested or recorded by the agent.
+- Previewed the ownership migration and found three unowned properties.
+- Assigned those three properties to the user-selected account without replacing existing owners or property content.
+- Added the six-property initial collection without deleting or overwriting existing records.
+- Verified all nine properties appear in the signed-in host dashboard and public listing results.
+- Verified every visible property image loads and saved a final browser preview.
+- Confirmed the application is running locally, the repository is clean and the implementation commits are pushed.
+- Online payment activation still requires the user's Razorpay test keys; actual recovery email delivery requires SMTP configuration.
