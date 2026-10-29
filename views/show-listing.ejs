@@ -10,6 +10,7 @@
     <%- include("partials/navbar.ejs") %>
 
     <main class="detail-page">
+      <% if (notice) { %><p class="success-notice" role="status"><%= notice %></p><% } %>
       <a class="back-link" href="/listings">← Back to all stays</a>
 
       <header class="detail-heading">
@@ -27,6 +28,7 @@
         </p>
       </header>
 
+      <div class="listing-actions"><a class="create-listing-btn" href="/listings/<%= listing._id %>/edit">Edit property</a><a class="delete-link" href="/listings/<%= listing._id %>/delete">Delete property</a></div>
       <section class="detail-gallery">
         <img
           src="<%= listing.image || 'https://placehold.co/1200x800?text=airbnb' %>"

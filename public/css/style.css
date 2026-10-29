@@ -670,3 +670,16 @@ body {
 .error-home-link:hover {
   background: #c93636;
 }
+
+/* Listing management and feedback */
+.listing-actions { display: flex; flex-wrap: wrap; gap: 24px; align-items: center; margin-bottom: 24px; }
+.delete-link { color: #a82020; }
+.success-notice { padding: 16px; border: 1px solid #9ac9ab; border-radius: 8px; background: #eff9f2; color: #235c36; }
+.form-errors { margin-bottom: 24px; padding: 16px; border: 1px solid #e54b4b; border-radius: 8px; background: #fff5f5; }
+.form-errors h2 { font-size: 18px; }
+.form-errors li { margin: 8px 0; }
+a:focus-visible, button:focus-visible { outline: 3px solid #e54b4b; outline-offset: 4px; }
+.detail-description p { white-space: pre-line; }
+.listing-info h2, .detail-heading h1, .detail-location { overflow-wrap: anywhere; }
+.listing-form .back-link { margin: 20px 0 0; }
+@media (max-width: 380px) { .navbar { flex-wrap: wrap; gap: 12px; padding-top: 16px; padding-bottom: 16px; } }

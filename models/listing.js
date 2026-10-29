@@ -1,31 +1,9 @@
-const mongoose = require("mongoose");
-
+const mongoose = require('mongoose');
+const { validImage, DEFAULT_IMAGE } = require('../validation/listing');
+const text = maxLength => ({ type: String, required: true, trim: true, maxLength });
 const listingSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: true,
-  },
-  description: {
-    type: String,
-    required: true,
-  },
-  price: {
-    type: Number,
-    required: true,
-    min: 0,
-  },
-  location: {
-    type: String,
-    required: true,
-  },
-  country: {
-    type: String,
-    required: true,
-  },
-  image: {
-    type: String,
-    default: "https://placehold.co/600x400",
-  },
+  title: text(100), description: text(2000), location: text(100), country: text(100),
+  price: { type: Number, required: true, min: 0, max: 100000000, validate: Number.isFinite },
+  image: { type: String, trim: true, maxLength: 2048, default: DEFAULT_IMAGE, validate: validImage },
 });
-
-module.exports = mongoose.model("Listing", listingSchema);
+module.exports = mongoose.model('Listing', listingSchema);

@@ -11,6 +11,7 @@
   <%- include("partials/navbar.ejs") %>
 
   <main class="listings-page">
+      <% if (notice) { %><p class="success-notice" role="status"><%= notice %></p><% } %>
     <section class="listings-heading">
       <div>
         <p class="eyebrow">YOUR NEXT GETAWAY</p>
