@@ -2,7 +2,7 @@ require('dotenv').config({ quiet: true });
 const mongoose = require('mongoose');
 const User = require('../models/user');
 const Listing = require('../models/listing');
-const { photos } = require('../lib/photos');
+const { photos, roomPhotos } = require('../lib/photos');
 const samples = [
   ['Mountain-view cabin', 'Manali', 3400, 'Cabin', 4, ['Wi-Fi', 'Parking']],
   [
@@ -50,6 +50,7 @@ async function main() {
   const user = await User.findOne({ email });
   if (!user) throw Error('The specified host account does not exist.');
   let added = 0;
+  let galleries = 0;
   for (const [
     title,
     location,
@@ -72,13 +73,30 @@ async function main() {
           country: 'India',
           description: `Settle into a thoughtfully designed ${category.toLowerCase()} in ${location}. Enjoy comfortable rooms, practical amenities and an ideal base for discovering the neighbourhood.`,
           image: photos[category],
+          gallery: Object.keys(roomPhotos),
         },
       },
       { upsert: true, runValidators: true },
     );
     added += result.upsertedCount;
+    if (process.argv.includes('--add-photos') && !result.upsertedCount) {
+      const updated = await Listing.updateOne(
+        {
+          owner: user._id,
+          title,
+          $or: [{ gallery: { $exists: false } }, { gallery: { $size: 0 } }],
+        },
+        { $set: { gallery: Object.keys(roomPhotos) } },
+        { runValidators: true },
+      );
+      galleries += updated.modifiedCount;
+    }
   }
   console.log(`Added ${added} properties. Existing data was preserved.`);
+  if (process.argv.includes('--add-photos'))
+    console.log(
+      `Added photo galleries to ${galleries} prepared properties. Existing galleries were preserved.`,
+    );
 }
 main()
   .catch(() => {

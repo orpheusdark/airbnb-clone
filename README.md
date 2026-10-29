@@ -2,6 +2,8 @@
 
 A full-stack accommodation booking platform with guest accounts, property hosting, availability search, reservations, reviews and secure checkout integration. Built with **Node.js, Express, MongoDB, Mongoose, EJS and custom HTML/CSS**.
 
+![Homes and discovery interface](docs/screenshots/homes.jpg)
+
 ## Features
 
 - Account registration, login/logout and persistent server sessions.
@@ -14,7 +16,10 @@ A full-stack accommodation booking platform with guest accounts, property hostin
 - Razorpay checkout, payment verification, repeat-submission protection and payment reversal handling.
 - Future reservation cancellation with immediate availability updates.
 - Verified-stay reviews with author-only updates/removal and average ratings.
-- Responsive layouts, bundled property photography and area links to Google Maps.
+- Airbnb-inspired responsive design with a rounded search bar, account menu, photo-first cards and mobile navigation.
+- Calendar date-range selection, guest steppers, filter dialogs and instant wishlist feedback.
+- Photo galleries with keyboard navigation, share links, live price previews and an embedded area map.
+- Consistent hosting, account, trip, editor, checkout and receipt interfaces with loading and error states.
 
 ## Requirements
 
@@ -112,9 +117,13 @@ npm run seed -- --email YOUR_ACCOUNT_EMAIL
 
 ## Photos
 
-Upload one JPEG, PNG or WebP photo of up to 5 MB from the property edit page, or supply an external HTTP/HTTPS URL. Uploads are checked by file signature and stored in MongoDB. Leaving the URL blank during editing keeps the existing photo. The property-type image option selects a bundled photograph.
+Upload a JPEG, PNG or WebP cover photo of up to 5 MB from the property edit page, or supply an external HTTP/HTTPS URL. Add up to four additional image URLs to build a five-photo gallery. Uploads are checked by file signature and stored in MongoDB. Leaving the URL blank during editing keeps the existing photo. The property-type image option selects a bundled photograph.
 
 Bundled photographs are stored under `public/images/stays/` and remain available without an external image request. See [image credits](docs/image-credits.md) for sources and licensing.
+
+To enrich only the prepared properties that do not already have galleries, add `--add-photos` to the seed command. Existing host galleries and the original properties are preserved.
+
+The interface uses a locally hosted Manrope font under the SIL Open Font License; the license is included in `public/fonts/OFL.txt`. Icons are lightweight inline SVGs. The help center explains the app’s actual booking, account, hosting and payment behavior.
 
 ## Verification
 
@@ -149,4 +158,4 @@ See the [acceptance checklist](docs/submission-checklist.md) for a complete brow
 
 Configure HTTPS, a stable session secret, Atlas, the public application URL and SMTP. Set `NODE_ENV=production` and configure `TRUST_PROXY` only for the actual proxy topology. The application does not automatically publish a deployment.
 
-The current implementation uses per-process request rate limits. Multi-instance hosting requires a shared limiter and operational monitoring. Additional roadmap items include email verification, social login, messaging, multi-photo galleries, map embedding, administrative moderation and account/data-retention controls.
+The current implementation uses per-process request rate limits. Multi-instance hosting requires a shared limiter and operational monitoring. Additional roadmap items include email verification, social login, messaging, administrative moderation and account/data-retention controls.

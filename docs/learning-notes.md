@@ -206,3 +206,23 @@ An invalid ID and a nonexistent listing are different situations: the former is 
 - Validate the configured key type before making provider requests, and avoid printing credentials or authorization headers.
 - Creating an order verifies authentication and the order API; it does not itself make a payment.
 - Payment completion additionally requires hosted checkout, signature verification, amount/order checks and capture confirmation.
+
+## A consistent interface across server-rendered pages
+
+- Shared partials for icons, navigation, notices and document heads prevent different pages from drifting into different styles.
+- Define reusable spacing, colors, typography, button states and panel styles before adding page-specific layouts.
+- A responsive design can change layout and navigation while keeping the same meaningful content and working routes.
+- Keep labels, names, selected states and keyboard focus explicit for dropdowns, tabs and modal dialogs.
+- Native dialog elements provide a focus trap and Escape handling. Restore the triggering control after closing.
+- Keep dynamic feedback inside an open modal; ordinary page content is behind the top layer and becomes inert.
+
+## Progressive interactions and real application state
+
+- A form field named action can shadow HTMLFormElement.action. Read getAttribute('action') when building a fetch request.
+- Update a saved-state heart only after the server confirms success. Keep the normal POST/redirect path for non-enhanced form submissions.
+- Preserve dates and guest counts in links so users do not have to repeat choices during discovery and checkout.
+- A calendar should disable past/unavailable dates, honor stay limits and update the real date inputs used by the server.
+- Live price calculations explain the selected stay; they must not replace server-side pricing and availability checks.
+- Only display ratings calculated from real review records. Do not add fabricated scores or trust badges for appearance.
+- Optional gallery data lets the same component display a single cover or several photos without duplicating images.
+- Browser testing catches DOM behavior that HTTP tests cannot, while isolated database tests protect booking and authorization rules.

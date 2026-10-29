@@ -246,3 +246,48 @@ Never commit database connection strings, API keys, passwords, or other secrets.
 - No payment, capture or money transfer was performed during this verification.
 - Restarted the local application so secure checkout loads the configured provider.
 - Provider order creation is now verified against the actual test account. A complete hosted-checkout payment and callback remains a separate end-to-end acceptance step.
+
+## Interface and interaction redesign — 29 October 2026
+
+### Direction and shared design
+- Reviewed the current Airbnb homepage and used its navigation, rounded search, spacious card grid and compact typography as visual references.
+- Kept custom EJS/HTML/CSS and the MongoDB/Express stack.
+- Replaced the accumulated stylesheet overrides with a coherent responsive design system for typography, spacing, buttons, panels, fields and feedback.
+- Bundled the Manrope font locally with its SIL Open Font License, and added shared outline SVG icons, a favicon, a skip link and visible focus states.
+- Reworked account navigation, a profile dropdown, regional preferences, a real help center, footer navigation and a mobile bottom bar.
+
+### Discovery and properties
+- Added a rounded search bar, a date-range calendar, guest controls and a filter dialog.
+- Preserved date/guest filters across category changes and property links; checkout edit links return to the chosen dates.
+- Rebuilt property cards with real saved-state hearts, actual aggregate review ratings and honest New labels where reviews do not exist.
+- Added a JSON response to the existing save endpoint for immediate card feedback, while retaining normal form redirects.
+- Added optional additional photo URLs, a responsive photo grid and a full-screen viewer with keyboard/photo controls.
+- Added a share dialog, copy-link feedback, expandable descriptions, amenity/room sections and an embedded area map.
+- Added a sticky reservation panel, a mobile reserve bar and a live nightly-price preview while keeping server-side price/availability validation authoritative.
+
+### The rest of the application
+- Redesigned login, registration, account settings and recovery screens.
+- Rebuilt the property editor with grouped sections, guest/room steppers, character counts, photo previews and selection tiles.
+- Added image-based hosting cards, real property/reservation counts and a reservation table.
+- Added trip tabs, refreshed reservation receipts/cancellation screens and a two-column checkout review.
+- Updated secure payment, error, confirmation and recovery-message screens to share the same interface language.
+
+### Browser findings and corrections
+- Fixed account-menu semantics after the browser exposed the original summary as a generic control.
+- Fixed wishlist requests by reading the form action attribute explicitly; the named action field shadows the form.action property in browsers.
+- Moved copy-link feedback inside the open sharing dialog so it remains visible and accessible above the modal backdrop.
+- Verified filters, guest changes, search-to-property context, photo navigation, live prices, checkout, trip tabs, host editing and sharing using isolated preview accounts and data.
+- Checked narrow-screen checkout, trips, search and calendar behavior without horizontal page overflow.
+
+### Automated validation
+- All EJS pages compile, and the new browser script passes syntax checking.
+- Expanded regression coverage for gallery validation/persistence, saved-card JSON, static interface assets, the help center and search context.
+- All 15 tests pass, including the existing authentication, ownership, concurrent-booking and provider-checkout checks.
+
+### Live interface acceptance
+- Activated the redesigned interface against the configured application database and retained the user's existing signed-in session.
+- Added galleries to the six prepared properties that had none; existing galleries, original properties and reservation data were preserved.
+- Verified live discovery, the help center, browser script and locally hosted fonts return successfully.
+- Confirmed the live property page renders the gallery and the mobile layout fits a 375-pixel content viewport without horizontal page overflow.
+- Saved home, property and mobile-property screenshots under docs/screenshots and added the home preview to the README.
+- Kept the configured Razorpay integration and private environment file intact. The design work did not create a provider payment.

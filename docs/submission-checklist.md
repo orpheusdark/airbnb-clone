@@ -45,3 +45,15 @@ Provider adapter/callback automation uses a mocked provider. An actual gateway t
 - Test recovery-token expiration and single-use behavior.
 - Check invalid IDs, unknown routes, oversized uploads and form errors.
 - Check keyboard navigation, narrow screens and image loading.
+
+## Interface acceptance checks
+
+- Open and close the account menu, filters, language preferences, calendar and photo viewer using mouse/touch and keyboard.
+- Select a date range, change the guest count, submit search and verify those values carry into the property reservation panel.
+- Save a property from its heart button without leaving the grid, then verify it under Wishlists.
+- Navigate gallery photos with buttons and arrow keys; close the viewer and verify focus returns to its trigger.
+- Change stay dates and verify the preview total; unavailable nights and invalid stay lengths must be rejected by the server too.
+- Verify the checkout's Edit links keep the original dates and guests.
+- Exercise the Upcoming/Past/Cancelled trip tabs and their empty states.
+- Verify room-count steppers, character counts, amenity selections and cover previews in the property editor.
+- Check phone-width search, calendar, property, checkout, trip and account views, including fixed bottom navigation and reserve controls.
