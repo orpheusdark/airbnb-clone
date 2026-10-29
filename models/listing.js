@@ -8,6 +8,11 @@ const text = (maxLength) => ({
 });
 const listingSchema = new mongoose.Schema(
   {
+    gallery: {
+      type: [{ type: String, maxLength: 2048, validate: validImage }],
+      validate: (value) => value.length <= 4,
+      default: [],
+    },
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
     archived: { type: Boolean, default: false, index: true },
     bookingRevision: { type: Number, default: 0 },

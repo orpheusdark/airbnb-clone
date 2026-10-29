@@ -1,0 +1,16 @@
+<article class="listing-card">
+  <div class="card-photo">
+    <a class="listing-image-link" href="<%= listingUrl(listing) %>" aria-label="View <%= listing.title %>">
+      <img class="listing-image" src="<%= photoFor(listing) %>" alt="<%= listing.title %>" loading="lazy" width="560" height="530">
+    </a>
+    <span class="image-label"><%= listing.category || 'Home' %></span>
+    <% if (currentUser) { const saved = currentUser.favorites.some(id => String(id) === String(listing._id)); %>
+      <form method="POST" action="/listings/<%= listing._id %>/save" data-save-form class="card-save-form"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><input type="hidden" name="action" value="<%= saved ? 'remove' : 'save' %>"><button class="heart-button <%= saved ? 'is-saved' : '' %>" aria-label="<%= saved ? 'Remove from saved' : 'Save' %> <%= listing.title %>" aria-pressed="<%= saved %>"><%- include('icon', { name: 'heart' }) %></button></form>
+    <% } else { %><a class="heart-button" href="/login" aria-label="Log in to save <%= listing.title %>"><%- include('icon', { name: 'heart' }) %></a><% } %>
+  </div>
+  <div class="listing-info">
+    <div class="card-title-row"><h2><a href="<%= listingUrl(listing) %>"><%= listing.location %>, <%= listing.country %></a></h2><span class="card-rating"><%- include('icon', { name: 'star', size: 13 }) %><%= rating ? Number(rating.average).toFixed(2) : 'New' %></span></div>
+    <p class="card-subtitle"><%= listing.title %></p><p class="card-capacity"><%= listing.maxGuests || 2 %> guests · <%= listing.bedrooms ?? 1 %> bedroom<%= (listing.bedrooms ?? 1) === 1 ? '' : 's' %></p>
+    <p class="listing-price"><span class="price-amount"><%= money(Math.round(listing.price * 100)) %></span> <span>/ night</span></p>
+  </div>
+</article>

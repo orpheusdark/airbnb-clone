@@ -55,6 +55,20 @@ test('validation, password hashing and price calculations', async () => {
   for (const title of [' ', [], {}, 'x'.repeat(101)])
     assert.ok(validateListing({ ...details, title }).errors.length);
   assert.ok(validateListing({ ...details, maxGuests: '1.5' }).errors.length);
+  assert.equal(
+    validateListing({
+      ...details,
+      gallery: 'https://example.com/room.jpg\nhttps://example.com/view.jpg',
+    }).data.gallery.length,
+    2,
+  );
+  for (const gallery of [
+    'javascript:alert(1)',
+    'https://user:pass@example.com/photo.jpg',
+    Array(5).fill('https://example.com/photo.jpg').join('\n'),
+    ['https://example.com/photo.jpg'],
+  ])
+    assert.ok(validateListing({ ...details, gallery }).errors.length);
   assert.ok(
     validateListing({ ...details, amenities: ['$where'] }).errors.length,
   );
@@ -404,6 +418,62 @@ test(
         );
       },
     );
+    await t.test(
+      'gallery editing, saved-card JSON and search context support the enhanced interface',
+      async () => {
+        const gallery =
+          'https://example.com/bedroom.jpg\nhttps://example.com/view.jpg';
+        await host.get(`/listings/${listingId}/edit`);
+        assert.equal(
+          (
+            await host.post(`/listings/${listingId}/edit`, {
+              ...details,
+              title: 'Updated Cabin',
+              price: '1500.25',
+              gallery,
+            })
+          ).status,
+          303,
+        );
+        assert.equal((await Listing.findById(listingId)).gallery.length, 2);
+        assert.match(
+          (await guest.get(`/listings/${listingId}`)).html,
+          /Show all photos/,
+        );
+        assert.equal(
+          (
+            await host.post(`/listings/${listingId}/edit`, {
+              ...details,
+              title: 'Updated Cabin',
+              price: '1500.25',
+              gallery: 'javascript:alert(1)',
+            })
+          ).status,
+          400,
+        );
+        assert.equal((await Listing.findById(listingId)).gallery.length, 2);
+        for (const action of ['save', 'remove']) {
+          const response = await guest.request(`/listings/${listingId}/save`, {
+            method: 'POST',
+            headers: {
+              accept: 'application/json',
+              'content-type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({ action, _csrf: guest.token }),
+          });
+          assert.equal(response.status, 200);
+          assert.deepEqual(JSON.parse(response.html), {
+            saved: action === 'save',
+          });
+        }
+        const result = await guest.get(
+          `/listings?checkIn=${day(60)}&checkOut=${day(62)}&guests=2`,
+        );
+        assert.match(result.html, /&amp;guests=2/);
+        assert.equal((await guest.get('/help')).status, 200);
+        assert.equal((await guest.get('/js/ui.js')).status, 200);
+      },
+    );
     let firstKey;
     await t.test(
       'booking validation, reservation totals, concurrent reservations and replay protection',
@@ -589,7 +659,7 @@ test(
         );
         let result = await guest.get(`/listings/${listingId}`);
         assert.match(result.html, /&lt;script&gt;great/);
-        assert.match(result.html, /5.0 \/ 5/);
+        assert.match(result.html, /5.0 · 1 review/);
         assert.equal(
           (
             await host.post(`/listings/${listingId}/reviews`, {

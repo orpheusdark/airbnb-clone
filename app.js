@@ -50,7 +50,11 @@ function createApp(options = {}) {
         directives: {
           imgSrc: ["'self'", 'https:', 'http:', 'data:'],
           scriptSrc: ["'self'", 'https://checkout.razorpay.com'],
-          frameSrc: ['https://*.razorpay.com'],
+          frameSrc: [
+            'https://*.razorpay.com',
+            'https://maps.google.com',
+            'https://www.google.com',
+          ],
           connectSrc: ["'self'", 'https://*.razorpay.com'],
           upgradeInsecureRequests: production ? [] : null,
         },
@@ -106,6 +110,25 @@ function createApp(options = {}) {
     res.locals.csrfToken = '';
     res.locals.paymentEnabled = !!gateway;
     res.locals.photoFor = require('./lib/photos').photoFor;
+    res.locals.galleryFor = require('./lib/photos').galleryFor;
+    res.locals.currentPath = req.path;
+    res.locals.listingUrl = (listing) => {
+      const query = new URLSearchParams();
+      for (const key of ['checkIn', 'checkOut', 'guests'])
+        if (typeof req.query[key] === 'string' && req.query[key])
+          query.set(key, req.query[key]);
+      return (
+        '/listings/' + listing._id + (query.size ? '?' + query.toString() : '')
+      );
+    };
+    res.locals.categoryUrl = (category) => {
+      const query = new URLSearchParams();
+      for (const [key, value] of Object.entries(req.query))
+        if (typeof value === 'string' && !['category', 'page'].includes(key))
+          query.set(key, value);
+      query.set('category', category);
+      return '/listings?' + query.toString();
+    };
     res.locals.money = (paise) =>
       (paise / 100).toLocaleString('en-IN', {
         style: 'currency',
@@ -157,24 +180,20 @@ function createApp(options = {}) {
         standardHeaders: 'draft-8',
         legacyHeaders: false,
         handler: (req, res) =>
-          res
-            .status(429)
-            .render('error', {
-              statusCode: 429,
-              message: 'Too many requests. Please try again in 15 minutes.',
-            }),
+          res.status(429).render('error', {
+            statusCode: 429,
+            message: 'Too many requests. Please try again in 15 minutes.',
+          }),
       }),
     );
   app.use(require('./routes/auth')({ sendReset: options.sendReset }));
   app.use(require('./routes/payments')(gateway));
   app.use(require('./routes/stays')({ csrf, gateway }));
   app.use((req, res) =>
-    res
-      .status(404)
-      .render('error', {
-        statusCode: 404,
-        message: 'The page you are looking for does not exist.',
-      }),
+    res.status(404).render('error', {
+      statusCode: 404,
+      message: 'The page you are looking for does not exist.',
+    }),
   );
   app.use((error, req, res, next) => {
     if (res.headersSent) return next(error);

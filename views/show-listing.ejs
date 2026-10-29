@@ -1,86 +1,35 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title><%= listing.title %> | Airbnb</title>
-    <link rel="stylesheet" href="/css/style.css" />
-  </head>
-  <body>
-    <%- include("partials/navbar.ejs") %>
-
-    <main class="detail-page">
-      <% if (notice) { %><p class="success-notice" role="status"><%= notice %></p><% } %>
-      <a class="back-link" href="/listings">← Back to all stays</a>
-
-      <header class="detail-heading">
-        <div>
-          <p class="eyebrow">YOUR NEXT STAY</p>
-          <h1><%= listing.title %></h1>
-          <p class="detail-location">
-            <span aria-hidden="true">⌖</span>
-            <%= listing.location %>, <%= listing.country %>
-          </p>
-        </div>
-        <p class="detail-price">
-          ₹<%= Number(listing.price).toLocaleString("en-IN") %>
-          <span>/ night</span>
-        </p>
-      </header>
-
-      <% const isOwner = currentUser && String(listing.owner) === String(currentUser._id); %><% if (isOwner) { %><div class="listing-actions"><a class="create-listing-btn" href="/listings/<%= listing._id %>/edit">Edit property</a><a class="delete-link" href="/listings/<%= listing._id %>/delete">Delete property</a></div><% } %>
-      <section class="detail-gallery">
-        <img
-          src="<%= photoFor(listing) %>"
-          alt="<%= listing.title %>"
-        />
-        <span class="gallery-label">PROPERTY GALLERY</span>
-      </section>
-
-      <section class="detail-content">
-        <article class="detail-description">
-          <p class="eyebrow">THE PROPERTY</p>
-          <h2>Make yourself at home.</h2><p>Hosted by <%= owner?.name || "a host awaiting account setup" %> · <%= listing.category || "Home" %></p><p><%= listing.maxGuests || 2 %> guests · <%= listing.bedrooms ?? 1 %> bedrooms · <%= listing.bathrooms || 1 %> bathrooms</p>
-          <p><%= listing.description %></p>
-
-          <div class="detail-divider"></div>
-
-          <h3>What this place offers</h3><ul class="amenity-list"><% (listing.amenities || []).forEach(amenity => { %><li><%= amenity %></li><% }) %></ul><% if (!(listing.amenities || []).length) { %><p>No amenities specified.</p><% } %><h3>Location</h3>
-          <p><%= listing.location %>, <%= listing.country %></p><a href="https://www.google.com/maps/search/?api=1&query=<%= encodeURIComponent(listing.location + ', ' + listing.country) %>" target="_blank" rel="noopener noreferrer">View area on Google Maps ↗</a>
-        </article>
-
-        <aside class="booking-card">
-          <p class="booking-price">
-            ₹<%= Number(listing.price).toLocaleString("en-IN") %>
-            <span>/ night</span>
-          </p>
-
-          <div class="booking-note">
-            <span class="booking-dot"></span>
-            <span>Ready for your next getaway</span>
-          </div>
-
-          <% if (!listing.owner) { %><p>The host must activate this property before it can be booked.</p>
-          <% } else if (isOwner) { %><p>This is your property. View guest reservations in your <a href="/host">host dashboard</a>.</p>
-          <% } else { %>
-          <form method="POST" action="/listings/<%= listing._id %>/checkout">
-            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-            <div class="form-field"><label for="arrival">Check-in</label><input id="arrival" name="checkIn" type="date" min="<%= today %>" required></div>
-            <div class="form-field"><label for="departure">Check-out</label><input id="departure" name="checkOut" type="date" min="<%= today %>" required></div>
-            <div class="form-field"><label for="partySize">Guests</label><input id="partySize" name="guests" type="number" min="1" max="<%= listing.maxGuests || 2 %>" value="1" required></div>
-            <button class="submit-listing-btn"><%= currentUser ? 'Review reservation' : 'Log in to reserve' %></button>
-          </form><% } %>
-          <p class="booking-disclaimer">Cancel before your check-in date. Your total is shown before confirmation.</p>
-          <% if (occupied.length) { %><details class="reserved-dates"><summary>View reserved nights</summary><p><%= occupied.map(night => date(night.date)).join(', ') %></p></details><% } %>
-          <% if (currentUser) { const saved = currentUser.favorites.some(id => String(id) === String(listing._id)); %><form class="save-form" method="POST" action="/listings/<%= listing._id %>/save"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><input type="hidden" name="action" value="<%= saved ? 'remove' : 'save' %>"><button class="secondary-btn"><%= saved ? '♥ Remove from saved' : '♡ Save this property' %></button></form><% } else { %><p><a href="/login">Log in to save this property</a></p><% } %>
-        </aside>
-      </section>
-      <section id="reviews" class="reviews-section"><h2>Guest reviews <%= average ? '· ' + average + ' / 5' : '' %></h2><p><%= reviews.length %> review(s)</p>
-        <% if (!reviews.length) { %><p>No reviews yet. Guests can leave a review after completing a stay.</p><% } %>
-        <% reviews.forEach(review => { %><article class="review-card"><h3><%= review.author?.name || 'Guest' %> · <%= review.rating %> / 5</h3><small><%= date(review.createdAt) %></small><p><%= review.comment %></p></article><% }) %>
-        <% if (mayReview) { const ownReview = reviews.find(review => String(review.author?._id) === String(currentUser._id)); %><h3><%= ownReview ? 'Update your review' : 'Share your experience' %></h3><form class="listing-form" method="POST" action="/listings/<%= listing._id %>/reviews"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><div class="form-field"><label for="rating">Rating</label><select id="rating" name="rating" required><% for (let star = 5; star >= 1; star--) { %><option value="<%= star %>" <%= ownReview?.rating === star ? 'selected' : '' %>><%= star %> stars</option><% } %></select></div><div class="form-field"><label for="comment">Your review</label><textarea id="comment" name="comment" rows="4" required maxlength="2000"><%= ownReview?.comment || '' %></textarea></div><button class="submit-listing-btn">Save review</button></form>
-        <% if (ownReview) { %><form class="save-form" method="POST" action="/listings/<%= listing._id %>/reviews/delete"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button class="secondary-btn">Delete my review</button></form><% } %><% } %>
-      </section>
-    </main>
-  <%- include('partials/footer') %></body>
-</html>
+<% const isOwner = currentUser && String(listing.owner) === String(currentUser._id); const photos = galleryFor(listing); const ownReview = currentUser ? reviews.find(review => String(review.author?._id) === String(currentUser._id)) : null; const amenityIcons = { 'Wi-Fi': 'wifi', Kitchen: 'kitchen', Parking: 'parking', Pool: 'pool', 'Air conditioning': 'air', Workspace: 'desk' }; %>
+<!DOCTYPE html><html lang="en"><%- include('partials/head', { title: listing.title }) %><body class="property-page"><%- include('partials/navbar') %>
+<main class="detail-page" id="main-content">
+  <%- include('partials/notice') %>
+  <a class="back-link" href="/listings"><%- include('partials/icon', { name: 'left', size: 16 }) %>All homes</a>
+  <header class="detail-heading"><h1><%= listing.title %></h1><div class="detail-meta-row"><div class="detail-location"><% if (average) { %><a href="#reviews" class="rating-link"><%- include('partials/icon', { name: 'star', size: 14 }) %><strong><%= average %></strong><span>·</span><u><%= reviews.length %> review<%= reviews.length === 1 ? '' : 's' %></u></a><span>·</span><% } %><a href="#location"><%= listing.location %>, <%= listing.country %></a></div><div class="property-actions"><button type="button" class="text-button" data-open-dialog="share-dialog"><%- include('partials/icon', { name: 'share', size: 17 }) %><u>Share</u></button>
+    <% if (currentUser) { const saved = currentUser.favorites.some(id => String(id) === String(listing._id)); %><form method="POST" action="/listings/<%= listing._id %>/save" data-save-form><input type="hidden" name="_csrf" value="<%= csrfToken %>"><input type="hidden" name="action" value="<%= saved ? 'remove' : 'save' %>"><button class="text-button property-save <%= saved ? 'is-saved' : '' %>" aria-pressed="<%= saved %>" aria-label="<%= saved ? 'Remove from saved' : 'Save' %> <%= listing.title %>"><%- include('partials/icon', { name: 'heart', size: 17 }) %><u data-save-label><%= saved ? 'Saved' : 'Save' %></u></button></form><% } else { %><a class="text-button" href="/login"><%- include('partials/icon', { name: 'heart', size: 17 }) %><u>Save</u></a><% } %>
+  </div></div></header>
+  <section class="photo-grid photo-grid-<%= photos.length %>" id="photos" aria-label="Property photos"><% photos.forEach((photo, index) => { %><button class="gallery-tile" type="button" data-gallery-index="<%= index %>" data-open-dialog="photo-dialog" aria-label="Show property photo <%= index + 1 %>"><img src="<%= photo %>" alt="<%= listing.title %> — photo <%= index + 1 %>" loading="<%= index === 0 ? 'eager' : 'lazy' %>" width="1000" height="700"></button><% }) %><button type="button" class="show-photos-button" data-open-dialog="photo-dialog"><%- include('partials/icon', { name: 'grid', size: 16 }) %><%= photos.length > 1 ? 'Show all photos' : 'View photo' %></button></section>
+  <div class="property-layout">
+    <div class="property-main">
+      <section class="property-intro section-divider"><div><h2><%= listing.category || 'Home' %> in <%= listing.location %>, <%= listing.country %></h2><p><%= listing.maxGuests || 2 %> guests <span>·</span> <%= listing.bedrooms ?? 1 %> bedroom<%= (listing.bedrooms ?? 1) === 1 ? '' : 's' %> <span>·</span> <%= listing.bathrooms || 1 %> bathroom<%= (listing.bathrooms || 1) === 1 ? '' : 's' %></p><a href="#reviews" class="rating-link"><%- include('partials/icon', { name: 'star', size: 14 }) %><%= average ? average + ' · ' + reviews.length + ' reviews' : 'No reviews yet' %></a></div></section>
+      <section class="host-summary section-divider"><span class="avatar avatar-large"><%= owner?.name?.charAt(0).toUpperCase() || 'H' %></span><div><h3>Hosted by <%= owner?.name || 'your host' %></h3><p><%= listing.category || 'Home' %> host</p></div><% if (isOwner) { %><a href="/host" class="text-link host-manage">Your dashboard</a><% } %></section>
+      <% if (isOwner) { %><div class="owner-toolbar"><%- include('partials/icon', { name: 'key', size: 22 }) %><span>You’re viewing your property.</span><a href="/listings/<%= listing._id %>/edit" class="button button-outline button-small">Edit property</a><a href="/listings/<%= listing._id %>/delete" class="text-link delete-link">Remove</a></div><% } %>
+      <section class="property-highlights section-divider"><div><%- include('partials/icon', { name: 'home', size: 28 }) %><div><h3>Room for your kind of getaway</h3><p><%= /^[aeiou]/i.test(listing.category || 'home') ? 'An' : 'A' %> <%= (listing.category || 'home').toLowerCase() %> with space for up to <%= listing.maxGuests || 2 %> guests.</p></div></div><div><%- include('partials/icon', { name: 'calendar', size: 28 }) %><div><h3>Plan with confidence</h3><p>Review your dates and total before confirming your stay.</p></div></div><div><%- include('partials/icon', { name: 'key', size: 28 }) %><div><h3>Your trip, in one place</h3><p>Manage your reservation and cancel before check-in from My trips.</p></div></div></section>
+      <section class="property-description section-divider"><h2>About this space</h2><p class="description-text description-collapsed" data-description><%= listing.description %></p><% if (listing.description.length > 300) { %><button class="text-button js-only" type="button" data-expand-description aria-expanded="false"><u>Show more</u><%- include('partials/icon', { name: 'right', size: 16 }) %></button><% } %></section>
+      <section class="amenities-section section-divider" id="amenities"><h2>What this place offers</h2><% if (listing.amenities?.length) { %><ul class="amenity-grid"><% listing.amenities.forEach(amenity => { %><li><%- include('partials/icon', { name: amenityIcons[amenity] || 'check', size: 25 }) %><%= amenity %></li><% }) %></ul><% } else { %><p class="muted">The host hasn’t added amenities yet.</p><% } %></section>
+      <section class="sleeping-section section-divider"><h2>Room to settle in</h2><div class="room-cards"><div class="room-card"><%- include('partials/icon', { name: 'bed', size: 28 }) %><strong><%= listing.bedrooms ?? 1 %> bedroom<%= (listing.bedrooms ?? 1) === 1 ? '' : 's' %></strong><span>A space to rest</span></div><div class="room-card"><%- include('partials/icon', { name: 'bath', size: 28 }) %><strong><%= listing.bathrooms || 1 %> bathroom<%= (listing.bathrooms || 1) === 1 ? '' : 's' %></strong><span>For your comfort</span></div></div></section>
+    </div>
+    <aside class="booking-column" id="reserve"><div class="booking-card"><div class="booking-price-row"><p class="booking-price"><%= money(Math.round(listing.price * 100)) %><span> / night</span></p><% if (average) { %><span class="card-rating"><%- include('partials/icon', { name: 'star', size: 13 }) %><%= average %></span><% } %></div>
+      <% if (!listing.owner) { %><div class="inline-information"><%- include('partials/icon', { name: 'info' }) %><p>The host must activate this property before it can be booked.</p></div>
+      <% } else if (isOwner) { %><div class="owner-booking-note"><span class="empty-icon"><%- include('partials/icon', { name: 'home', size: 30 }) %></span><h3>Make room for your next guest</h3><p>Manage your property and guest reservations from your host dashboard.</p><a href="/host" class="button button-primary full-width">Host dashboard</a></div>
+      <% } else { %><form method="POST" action="/listings/<%= listing._id %>/checkout" data-booking-form data-nightly="<%= Math.round(listing.price * 100) %>" data-occupied="<%= occupied.map(night => date(night.date)).join(',') %>"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><div class="booking-inputs"><div class="booking-dates"><div><label for="arrival">Check-in</label><input id="arrival" name="checkIn" value="<%= initialStay.checkIn %>" type="date" min="<%= today %>" required data-check-in></div><div><label for="departure">Check-out</label><input id="departure" name="checkOut" value="<%= initialStay.checkOut %>" type="date" min="<%= today %>" required data-check-out></div></div><div class="booking-guests"><label for="partySize">Guests</label><select id="partySize" name="guests" required><% for (let guests = 1; guests <= (listing.maxGuests || 2); guests++) { %><option value="<%= guests %>" <%= Number(initialStay.guests) === guests ? "selected" : "" %>><%= guests %> guest<%= guests === 1 ? '' : 's' %></option><% } %></select></div></div><p class="form-inline-error" role="alert" data-booking-error hidden></p><button class="button button-primary full-width"><%= currentUser ? 'Review reservation' : 'Log in to reserve' %></button><p class="booking-disclaimer">You’ll review the total before confirming.</p><div class="price-preview" data-price-preview hidden><div><span data-nightly-label></span><span data-stay-price></span></div><div class="price-total"><strong>Total (INR)</strong><strong data-total-price></strong></div></div></form><% } %>
+    </div><p class="booking-footnote"><%- include('partials/icon', { name: 'shield', size: 16 }) %>Your reservation is protected by secure checkout.</p><% if (occupied.length) { %><details class="reserved-dates"><summary>View reserved nights</summary><p><%= occupied.map(night => date(night.date)).join(', ') %></p></details><% } %></aside>
+  </div>
+  <section id="reviews" class="reviews-section section-divider"><h2><%- include('partials/icon', { name: 'star', size: 23 }) %><%= average ? average + ' · ' + reviews.length + ' review' + (reviews.length === 1 ? '' : 's') : 'No reviews yet' %></h2><% if (!reviews.length) { %><p class="muted">Be among the first guests to stay here. Reviews are shared after a completed stay.</p><% } %><div class="review-grid"><% reviews.forEach(review => { %><article class="review-card"><div class="review-author"><span class="avatar"><%= review.author?.name?.charAt(0).toUpperCase() || 'G' %></span><div><h3><%= review.author?.name || 'Guest' %></h3><span><%= date(review.createdAt) %></span></div></div><p class="review-rating"><%- include('partials/icon', { name: 'star', size: 12 }) %><%= review.rating %> / 5</p><p><%= review.comment %></p></article><% }) %></div>
+    <% if (mayReview) { %><div class="review-editor"><h3><%= ownReview ? 'Update your review' : 'How was your stay?' %></h3><form method="POST" action="/listings/<%= listing._id %>/reviews" class="listing-form"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><div class="form-field"><label for="rating">Rating</label><select id="rating" name="rating" required><% for (let star = 5; star >= 1; star--) { %><option value="<%= star %>" <%= ownReview?.rating === star ? 'selected' : '' %>><%= star %> stars</option><% } %></select></div><div class="form-field"><label for="comment">Your review</label><textarea id="comment" name="comment" required maxlength="2000" rows="4"><%= ownReview?.comment || '' %></textarea></div><button class="button button-dark">Save review</button></form><% if (ownReview) { %><form method="POST" action="/listings/<%= listing._id %>/reviews/delete"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button class="text-button delete-link">Delete my review</button></form><% } %></div><% } %>
+  </section>
+  <section id="location" class="location-section section-divider"><h2>Where you’ll be</h2><p><%= listing.location %>, <%= listing.country %></p><div class="map-container"><iframe title="Map of <%= listing.location %>" src="https://maps.google.com/maps?q=<%= encodeURIComponent(listing.location + ', ' + listing.country) %>&z=12&output=embed" loading="lazy" referrerpolicy="no-referrer"></iframe></div><p class="muted small">Explore the surrounding area.</p><a href="https://www.google.com/maps/search/?api=1&query=<%= encodeURIComponent(listing.location + ', ' + listing.country) %>" class="text-link" target="_blank" rel="noopener noreferrer">Open in Google Maps<%- include('partials/icon', { name: 'arrow', size: 16 }) %></a></section>
+  <section class="things-to-know"><h2>Things to know</h2><div><article><h3>Guest capacity</h3><p>Up to <%= listing.maxGuests || 2 %> guests.</p><p>Please keep your reservation’s guest count accurate.</p></article><article><h3>Cancellation</h3><p>Cancel before your check-in date from My trips.</p><a href="/help#reservations" class="text-link">Read the cancellation policy</a></article><article><h3>Before you book</h3><p>Review the dates, price and property details before confirming.</p><a href="/help" class="text-link">Visit the help center</a></article></div></section>
+</main>
+<dialog id="photo-dialog" class="photo-dialog" aria-labelledby="photo-title"><div class="photo-dialog-toolbar"><button type="button" class="icon-button" data-close-dialog aria-label="Close photos"><%- include('partials/icon', { name: 'close' }) %></button><h2 id="photo-title"><%= listing.title %></h2><span data-gallery-counter>1 / <%= photos.length %></span></div><div class="photo-stage"><button type="button" class="gallery-arrow gallery-prev" data-gallery-step="-1" aria-label="Previous photo" <%= photos.length === 1 ? 'hidden' : '' %>><%- include('partials/icon', { name: 'left' }) %></button><% photos.forEach((photo, index) => { %><img src="<%= photo %>" alt="<%= listing.title %> — photo <%= index + 1 %>" data-gallery-photo <%= index ? 'hidden' : '' %> loading="lazy"><% }) %><button type="button" class="gallery-arrow gallery-next" data-gallery-step="1" aria-label="Next photo" <%= photos.length === 1 ? 'hidden' : '' %>><%- include('partials/icon', { name: 'right' }) %></button></div></dialog>
+<dialog id="share-dialog" class="app-dialog share-dialog" aria-labelledby="share-title"><div class="dialog-heading"><button type="button" class="icon-button" data-close-dialog aria-label="Close sharing"><%- include('partials/icon', { name: 'close', size: 20 }) %></button><h2 id="share-title">Share this place</h2></div><div class="dialog-content"><div class="share-property"><img src="<%= photoFor(listing) %>" alt=""><div><strong><%= listing.title %></strong><p><%= listing.location %>, <%= listing.country %></p></div></div><label for="share-url" class="sr-only">Property link</label><input id="share-url" class="share-url" readonly data-share-url><button class="button button-outline full-width" type="button" data-copy-link><%- include('partials/icon', { name: 'share', size: 18 }) %><span data-copy-label>Copy link</span></button><p class="sr-only" data-copy-status role="status"></p></div></dialog>
+<% if (!isOwner && listing.owner) { %><div class="mobile-reserve-bar"><div><strong><%= money(Math.round(listing.price * 100)) %></strong><span> / night</span><a href="#reserve">Choose dates</a></div><a href="#reserve" class="button button-primary">Reserve</a></div><% } %>
+<%- include('partials/footer') %></body></html>

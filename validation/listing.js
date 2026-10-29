@@ -44,6 +44,24 @@ function validateListing(body = {}) {
       'Price must be between 0 and 100,000,000 with at most two decimal places.',
     );
   values.image = typeof body.image === 'string' ? body.image.trim() : '';
+  values.gallery = typeof body.gallery === 'string' ? body.gallery.trim() : '';
+  const gallery = values.gallery
+    ? values.gallery
+        .split(/\r?\n/)
+        .map((value) => value.trim())
+        .filter(Boolean)
+    : [];
+  if (
+    (body.gallery !== undefined && typeof body.gallery !== 'string') ||
+    gallery.length > 4 ||
+    gallery.some(
+      (url) =>
+        url.length > 2048 || !/^https?:\/\//.test(url) || !validImage(url),
+    )
+  )
+    errors.push(
+      'Add at most four additional HTTP or HTTPS photo URLs, one per line.',
+    );
   if (
     (body.image !== undefined && typeof body.image !== 'string') ||
     values.image.length > 2048 ||
@@ -91,6 +109,7 @@ function validateListing(body = {}) {
     bathrooms: Number(values.bathrooms),
     price: Number(values.price),
     image: values.image || DEFAULT_IMAGE,
+    gallery,
   };
   return { values, errors, data };
 }

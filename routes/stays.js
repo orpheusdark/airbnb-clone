@@ -18,16 +18,29 @@ const { fail, requireUser, owns, objectId } = require('../lib/security');
 const { quote, today, available, reserve, cancel } = require('../lib/booking');
 module.exports = function stayRoutes({ csrf, gateway }) {
   const router = express.Router();
+  async function listingRatings(listings) {
+    const ratings = await Review.aggregate([
+      { $match: { listing: { $in: listings.map((listing) => listing._id) } } },
+      {
+        $group: {
+          _id: '$listing',
+          average: { $avg: '$rating' },
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+    return Object.fromEntries(
+      ratings.map((rating) => [String(rating._id), rating]),
+    );
+  }
   const form = (res, values = {}, errors = [], id = null, status = 200) =>
-    res
-      .status(status)
-      .render('listing-form', {
-        values,
-        errors,
-        id,
-        categories: CATEGORIES,
-        amenities: AMENITIES,
-      });
+    res.status(status).render('listing-form', {
+      values,
+      errors,
+      id,
+      categories: CATEGORIES,
+      amenities: AMENITIES,
+    });
   router.param('id', async (req, res, next, id) => {
     if (!objectId(id)) throw fail(400, 'Invalid listing ID.');
     req.listing = await Listing.findOne({ _id: id, archived: { $ne: true } });
@@ -41,6 +54,7 @@ module.exports = function stayRoutes({ csrf, gateway }) {
     return value.trim();
   };
   router.get('/', (req, res) => res.redirect('/listings'));
+  router.get('/help', (req, res) => res.render('help'));
   router.get('/listings', async (req, res) => {
     const filters = Object.fromEntries(
       [
@@ -138,6 +152,7 @@ module.exports = function stayRoutes({ csrf, gateway }) {
       total,
       categories: CATEGORIES,
       savedPage: false,
+      ratings: await listingRatings(listings),
     });
   });
   router.get('/listings/new', requireUser, (req, res) => form(res));
@@ -164,6 +179,8 @@ module.exports = function stayRoutes({ csrf, gateway }) {
     if (errors.length) return form(res, values, errors, req.params.id, 400);
     if (!values.image && req.body.removeImage !== 'yes')
       data.image = req.listing.image;
+    if (req.body.gallery === undefined)
+      data.gallery = req.listing.gallery || [];
     if (req.body.removeImage === 'yes') data.image = DEFAULT_IMAGE;
     const result = await Listing.updateOne(
       { _id: req.listing._id, owner: req.user._id, archived: { $ne: true } },
@@ -274,6 +291,7 @@ module.exports = function stayRoutes({ csrf, gateway }) {
       pages: 1,
       total: listings.length,
       categories: CATEGORIES,
+      ratings: await listingRatings(listings),
     });
   });
   router.post('/listings/:id/save', requireUser, async (req, res) => {
@@ -292,6 +310,8 @@ module.exports = function stayRoutes({ csrf, gateway }) {
     });
     if (!result.matchedCount)
       throw fail(400, 'You can save up to 200 properties.');
+    if (req.get('accept') === 'application/json')
+      return res.json({ saved: req.body.action === 'save' });
     res.redirect(303, `/listings/${req.params.id}?notice=saved`);
   });
   router.get('/host', requireUser, async (req, res) => {
@@ -339,6 +359,12 @@ module.exports = function stayRoutes({ csrf, gateway }) {
       owner,
       mayReview,
       occupied,
+      initialStay: Object.fromEntries(
+        ['checkIn', 'checkOut', 'guests'].map((key) => [
+          key,
+          typeof req.query[key] === 'string' ? req.query[key] : '',
+        ]),
+      ),
     });
   });
   router.post('/listings/:id/checkout', requireUser, async (req, res) => {
@@ -385,9 +411,11 @@ module.exports = function stayRoutes({ csrf, gateway }) {
     res.redirect(303, `/trips/${booking._id}?notice=booked`);
   });
   router.get('/trips', requireUser, async (req, res) => {
-    const bookings = await Booking.find({ guest: req.user._id }).sort({
-      checkIn: -1,
-    });
+    const bookings = await Booking.find({ guest: req.user._id })
+      .populate('listing', 'image category archived')
+      .sort({
+        checkIn: -1,
+      });
     res.render('trips', { bookings });
   });
   async function ownBooking(req, res, next) {
@@ -395,7 +423,7 @@ module.exports = function stayRoutes({ csrf, gateway }) {
     req.booking = await Booking.findOne({
       _id: req.params.bookingId,
       guest: req.user._id,
-    });
+    }).populate('listing', 'image category archived');
     if (!req.booking) throw fail(404, 'Booking not found.');
     next();
   }

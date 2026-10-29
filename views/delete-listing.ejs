@@ -1,16 +1,1 @@
-<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Delete property | airbnb</title><link rel="stylesheet" href="/css/style.css"></head>
-<body>
-<%- include('partials/navbar.ejs') %>
-<main class="form-page">
-  <h1>Delete this property?</h1>
-  <p><strong><%= listing.title %></strong> in <%= listing.location %>, <%= listing.country %> will be removed from public listings.</p>
-  <p>Existing booking history will be preserved. Properties with upcoming or active reservations cannot be removed.</p>
-  <form class="listing-form" method="POST" action="/listings/<%= listing._id %>/delete">
-    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-    <button class="submit-listing-btn" type="submit">Yes, delete property</button>
-    <a class="back-link" href="/listings/<%= listing._id %>">Cancel and keep property</a>
-  </form>
-</main>
-<%- include('partials/footer') %></body></html>
+<!DOCTYPE html><html lang="en"><%- include('partials/head', { title: 'Remove property' }) %><body><%- include('partials/navbar') %><main class="confirmation-shell" id="main-content"><a class="back-link" href="/listings/<%= listing._id %>"><%- include('partials/icon', { name: 'left', size: 17 }) %>Back to property</a><section class="confirmation-card"><img src="<%= photoFor(listing) %>" alt="<%= listing.title %>"><div class="confirmation-content"><span class="empty-icon"><%- include('partials/icon', { name: 'home', size: 30 }) %></span><h1>Remove this property?</h1><p><strong><%= listing.title %></strong> in <%= listing.location %>, <%= listing.country %> will no longer appear in search results.</p><div class="inline-information"><%- include('partials/icon', { name: 'info', size: 21 }) %><p>Your booking history stays available. Properties with upcoming or active reservations can’t be removed.</p></div><form method="POST" action="/listings/<%= listing._id %>/delete"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button class="button button-danger full-width">Yes, delete property</button><a class="button button-outline full-width" href="/listings/<%= listing._id %>">Cancel and keep property</a></form></div></section></main><%- include('partials/footer') %></body></html>

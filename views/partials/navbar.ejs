@@ -1,12 +1,22 @@
-<nav class="navbar" aria-label="Main navigation">
-  <a href="/listings" class="navbar-brand">Air<span>bnb</span></a>
-  <div class="navbar-links">
-    <a href="/listings">Explore stays</a>
-    <% if (currentUser) { %>
-      <a href="/saved">Saved</a><a href="/trips">My trips</a><a href="/host">Host dashboard</a>
-      <a href="/account"><%= currentUser.name %></a>
-      <form action="/logout" method="POST" class="inline-form"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button class="nav-button">Log out</button></form>
-    <% } else { %><a href="/login">Log in</a><a href="/signup">Sign up</a><% } %>
-    <a href="/listings/new" class="host-link">Add your property <span>+</span></a>
+<header class="site-header">
+  <a class="skip-link" href="#main-content">Skip to content</a>
+  <div class="navbar" aria-label="Main navigation">
+    <a href="/listings" class="navbar-brand" aria-label="Airbnb home"><svg viewBox="0 0 32 34" aria-hidden="true"><path d="M16 3c-2 0-3.7 2.6-5.7 6.7L3.5 23c-2.4 5.2 1.1 9.7 5.3 8 2.8-1 5.1-3.9 7.2-7.3 2.1 3.4 4.4 6.3 7.2 7.3 4.2 1.7 7.7-2.8 5.3-8L21.7 9.7C19.7 5.6 18 3 16 3Zm0 10c-5.8 0-5.4 7.9 0 13 5.4-5.1 5.8-13 0-13Z"/></svg><span>airbnb</span></a>
+    <nav class="header-tabs" aria-label="Discover"><a href="/listings" class="<%= typeof currentPath === 'string' && currentPath.startsWith('/listings') ? 'active' : '' %>"><%- include('icon', { name: 'home', size: 22 }) %><span>Homes</span></a><a href="/saved" class="<%= typeof currentPath === 'string' && currentPath === '/saved' ? 'active' : '' %>"><%- include('icon', { name: 'heart', size: 22 }) %><span>Wishlists</span></a><a href="/trips" class="<%= typeof currentPath === 'string' && currentPath.startsWith('/trips') ? 'active' : '' %>"><%- include('icon', { name: 'luggage', size: 22 }) %><span>Trips</span></a></nav>
+    <div class="header-actions">
+      <a href="/host" class="host-link">Become a host</a>
+      <button class="icon-button locale-button" type="button" data-open-dialog="locale-dialog" aria-label="Language and currency"><%- include('icon', { name: 'globe', size: 19 }) %></button>
+      <details class="profile-menu" data-menu><summary role="button" aria-expanded="false" aria-label="Open account menu"><%- include('icon', { name: 'menu', size: 17 }) %><span class="avatar avatar-small"><% if (currentUser) { %><%= currentUser.name.charAt(0).toUpperCase() %><% } else { %><%- include('icon', { name: 'user', size: 20 }) %><% } %></span></summary>
+        <nav class="profile-dropdown" aria-label="Account menu">
+          <% if (currentUser) { %><span class="menu-user-name">Hi, <%= currentUser.name %></span><a href="/trips">My trips</a><a href="/saved">Saved properties</a><a href="/host">Host dashboard</a><a href="/account">Account settings</a><div class="menu-divider"></div><form action="/logout" method="POST"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button class="menu-item">Log out</button></form>
+          <% } else { %><a href="/signup" class="strong">Sign up</a><a href="/login">Log in</a><div class="menu-divider"></div><a href="/listings/new">Airbnb your home</a><% } %><a href="/help">Help center</a>
+        </nav>
+      </details>
+    </div>
   </div>
-</nav>
+</header>
+<dialog id="locale-dialog" class="app-dialog locale-dialog" aria-labelledby="locale-title"><div class="dialog-heading"><button type="button" class="icon-button" data-close-dialog aria-label="Close language settings"><%- include('icon', { name: 'close', size: 20 }) %></button><h2 id="locale-title">Language and region</h2></div><div class="dialog-content"><h3>Your preferences</h3><div class="preference-option"><%- include('icon', { name: 'globe' }) %><div><strong>English</strong><p>India</p></div><%- include('icon', { name: 'check', size: 18 }) %></div><div class="preference-option"><strong>₹</strong><div><strong>Indian rupee</strong><p>INR</p></div><%- include('icon', { name: 'check', size: 18 }) %></div><p class="muted small">All prices are displayed in Indian rupees.</p></div></dialog>
+<nav class="mobile-nav" aria-label="Mobile navigation"><a href="/listings" class="<%= typeof currentPath === 'string' && currentPath.startsWith('/listings') ? 'active' : '' %>"><%- include('icon', { name: 'search', size: 21 }) %>Explore</a><a href="/saved"><%- include('icon', { name: 'heart', size: 21 }) %>Wishlists</a><a href="/trips"><%- include('icon', { name: 'luggage', size: 21 }) %>Trips</a><a href="<%= currentUser ? '/account' : '/login' %>"><%- include('icon', { name: 'user', size: 21 }) %><%= currentUser ? 'Profile' : 'Log in' %></a></nav>
+<div id="live-announcement" class="toast" role="status" aria-live="polite" hidden></div>
+
+<%- include('dates') %>
