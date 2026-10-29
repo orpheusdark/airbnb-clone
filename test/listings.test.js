@@ -1009,5 +1009,38 @@ test(
         }
       },
     );
+    await t.test('community import preserves existing accounts and is repeat-safe', async () => {
+      const { seedCommunity, generateCredentials } = require('../scripts/seed-community');
+      const credentials = generateCredentials();
+      const baseUsers = await User.countDocuments();
+      const collision = await User.create({ name: 'Existing account', email: credentials.accounts[0].email, passwordHash: await hashPassword(password) });
+      await assert.rejects(seedCommunity(credentials), /already belongs/);
+      assert.equal(await User.countDocuments(), baseUsers + 1);
+      await User.deleteOne({ _id: collision._id });
+      const added = await seedCommunity(credentials);
+      assert.deepEqual(added, { accountsAdded: 14, staysAdded: 18, reviewsAdded: 54, bookingsAdded: 54 });
+      assert.equal(await User.countDocuments(), baseUsers + 14);
+      const seeded = await User.find({ seedKey: /^community-v1-/ }).select('+passwordHash');
+      assert.ok(seeded.every((user) => user.email.endsWith('@duck.com')));
+      assert.equal(await verifyPassword(credentials.accounts[0].password, seeded.find((user) => user.email === credentials.accounts[0].email).passwordHash), true);
+      const properties = await Listing.find({ seedKey: /^community-v1-/ });
+      assert.equal(new Set(properties.map((listing) => String(listing.owner))).size, 6);
+      assert.equal(properties.length, 18);
+      const property = properties[0];
+      await Listing.updateOne({ _id: property._id }, { $set: { title: 'Host edited this property' } });
+      const hashes = seeded.map((user) => user.passwordHash).sort();
+      assert.deepEqual(await seedCommunity(credentials), { accountsAdded: 0, staysAdded: 0, reviewsAdded: 0, bookingsAdded: 0 });
+      assert.equal((await Listing.findById(property._id)).title, 'Host edited this property');
+      assert.deepEqual((await User.find({ seedKey: /^community-v1-/ }).select('+passwordHash')).map((user) => user.passwordHash).sort(), hashes);
+      const reviews = await Review.find({ seedKey: /^community-v1-/ });
+      assert.equal(reviews.length, 54);
+      for (const review of reviews) {
+        const stay = await Booking.findOne({ listing: review.listing, guest: review.author, status: 'confirmed', checkOut: { $lt: new Date() } });
+        assert.ok(stay);
+        assert.equal(stay.payment, 'not-collected');
+        assert.equal(stay.paymentId, undefined);
+        assert.equal(await Night.countDocuments({ booking: stay._id }), stay.nights);
+      }
+    });
   },
 );

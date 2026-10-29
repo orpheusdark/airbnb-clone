@@ -4,7 +4,7 @@ function validImage(value) {
     return true;
   if (
     typeof value === 'string' &&
-    /^\/images\/stays\/(home|apartment|cabin|villa|hotel)\.jpg$/.test(value)
+    /^\/images\/stays\/(home|apartment|cabin|villa|hotel|community-(0[1-9]|1[0-2]))\.jpg$/.test(value)
   )
     return true;
   try {

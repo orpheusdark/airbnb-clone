@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const schema = new mongoose.Schema(
   {
+    seedKey: { type: String, unique: true, sparse: true, select: false },
     listing: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Listing',

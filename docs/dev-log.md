@@ -296,3 +296,7 @@ Never commit database connection strings, API keys, passwords, or other secrets.
 
 Inspected recent provider attempts without exposing credentials or customer details: they remained created, with no authorisation or capture. Added current official test card and bank authentication instructions to checkout. Prevented duplicate checkout windows, preserved successful callback verification status on dismissal, and restored retry after a window opening error. Kept server signature, amount, capture and reservation checks intact; no fabricated provider transaction or local success bypass was added.
 
+
+### 29 October 2026 — Additional hosts and property collection
+
+Added a repeat-safe collection of 18 stays in Indian destinations, six host identities and eight guest identities, all using app-local @duck.com addresses. Wrote 54 distinct fictional review examples and linked each to a historical completed reservation with no money collected. Added 12 licensed stock covers, galleries and capacity/amenity details. Generated unique random passwords privately, hashed them with the existing account helper and excluded the access file from Git. Import markers are hidden from normal queries and cannot be submitted through public forms. Transactions keep each property, past nights and review collection consistent. Isolated tests verify email collision handling, ownership diversity, repeat runs and preservation of host edits and password hashes. All 18 tests passed.

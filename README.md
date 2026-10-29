@@ -166,3 +166,7 @@ Select Cards, enter the official test card 4100 2800 0000 1007, any CVV and a fu
 
 Reference: https://razorpay.com/docs/payments/payments/test-card-details/
 
+
+## Optional property collection
+
+Run npm run seed-community to add 18 properties across six hosts, eight guest accounts and 54 review entries with completed-stay records. All new app accounts use @duck.com addresses; this command does not create mailboxes or send messages. Account access details are generated once into the ignored .local/community-accounts.json file. Keep that file private. Repeating the command preserves edited listings, passwords and existing records. An email already owned by another account stops the import before any account is changed. The import adds historical records with no payment collected and does not create provider transactions. Licensed photographs are bundled locally; sources are recorded in the image credits.

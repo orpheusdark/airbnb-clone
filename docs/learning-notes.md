@@ -231,3 +231,7 @@ An invalid ID and a nonexistent listing are different situations: the former is 
 
 A created payment is not an authorised payment. Test bank authentication still needs the Success action or a valid test OTP. A checkout dismissal callback can arrive after the success handler; guard the successful verification state so dismissal cannot overwrite it. Disable duplicate window launches, but restore the launch control when the window fails to open or closes before success.
 
+
+### Repeat-safe account and content imports
+
+Treat generated content as fixtures in source documentation, even when the interface presents ordinary property cards. Stable hidden identifiers make repeat runs safe without matching mutable titles. Check all email collisions before writes, preserve existing passwords, and generate unique private credentials only once. Store money as integer paise and record uncollected fixture payments honestly. Mongoose requires ordered: true when creating multiple documents with a transaction session. Review fixtures need consistent historical reservations, timestamps and occupied-night rows, rather than bypassing the user-facing review rules.

@@ -8,7 +8,8 @@
     "start": "node app.js",
     "test": "node --test",
     "assign-listings": "node scripts/assign-listings.js",
-    "seed": "node scripts/seed.js"
+    "seed": "node scripts/seed.js",
+    "seed-community": "node scripts/seed-community.js"
   },
   "keywords": [],
   "author": "",

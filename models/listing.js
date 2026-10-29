@@ -8,6 +8,7 @@ const text = (maxLength) => ({
 });
 const listingSchema = new mongoose.Schema(
   {
+    seedKey: { type: String, unique: true, sparse: true, select: false },
     gallery: {
       type: [{ type: String, maxLength: 2048, validate: validImage }],
       validate: (value) => value.length <= 4,
