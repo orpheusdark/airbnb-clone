@@ -956,6 +956,7 @@ test(
             const payment = await client.post('/payments/order', { key });
             assert.equal(payment.status, 200, payment.html);
             assert.match(payment.html, /Razorpay test mode/);
+            assert.equal(payment.response.headers.get('cross-origin-opener-policy'), 'same-origin-allow-popups');
             return payment.html.match(/data-order="([^"]+)"/)[1];
           }
           let order = await checkout(40);

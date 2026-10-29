@@ -39,10 +39,12 @@ button.addEventListener('click', () => {
       },
     },
   });
-  checkout.on('payment.failed', () => {
+  checkout.on('payment.failed', (result) => {
+    const reason = result?.error?.description;
+    const detail = typeof reason === 'string' ? reason.slice(0, 300) + ' ' : '';
     if (!verified)
       status.textContent =
-        'The test payment did not complete. Retry with the test card below, then select Success on the test bank page or enter OTP 123456. Your dates are confirmed only after verification.';
+        detail + 'The test payment did not complete. If the test bank window never appeared, open this site in Chrome or Edge and allow the bank popup. Retry with the test card below, then select Success or enter OTP 123456. Your dates are confirmed only after verification.';
   });
   opened = true;
   button.disabled = true;

@@ -109,6 +109,8 @@ module.exports = function paymentRoutes(gateway) {
         throw error;
       }
     }
+    // Preserve the opener channel used by the provider’s bank authentication popup.
+    res.set('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
     res.render('payment', { attempt, listing, keyId: gateway.keyId });
   });
   router.post('/payments/verify', requireUser, async (req, res) => {

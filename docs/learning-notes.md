@@ -235,3 +235,7 @@ A created payment is not an authorised payment. Test bank authentication still n
 ### Repeat-safe account and content imports
 
 Treat generated content as fixtures in source documentation, even when the interface presents ordinary property cards. Stable hidden identifiers make repeat runs safe without matching mutable titles. Check all email collisions before writes, preserve existing passwords, and generate unique private credentials only once. Store money as integer paise and record uncollected fixture payments honestly. Mongoose requires ordered: true when creating multiple documents with a transaction session. Review fixtures need consistent historical reservations, timestamps and occupied-night rows, rather than bypassing the user-facing review rules.
+
+### Payment popups and browser isolation
+
+The default same-origin opener policy can sever communication with a cross-origin authentication popup. Apply same-origin-allow-popups to the checkout response when that channel is required, retaining the default on other pages. This is a compatibility correction, not evidence that a specific provider failure had that cause. Preserve signature and amount verification regardless of browser behavior, and distinguish an order or created payment from an actual captured transaction.
