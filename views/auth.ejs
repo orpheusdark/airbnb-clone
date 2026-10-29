@@ -1,0 +1,33 @@
+<% const titles = { signup: 'Create your account', login: 'Welcome back', forgot: 'Reset your password', reset: 'Choose a new password', account: 'Your account' }; %>
+<!DOCTYPE html><html lang="en"><%- include('partials/head', { title: titles[mode] }) %><body>
+<%- include('partials/navbar') %>
+<main class="form-page account-page">
+  <p class="eyebrow">YOUR NEXT CHAPTER</p><h1><%= titles[mode] %></h1>
+  <% if (notice) { %><p class="success-notice" role="status"><%= notice %></p><% } %>
+  <%- include('partials/errors', { errors }) %>
+  <form class="listing-form" method="POST" action="<%= mode === 'signup' ? '/signup' : mode === 'login' ? '/login' : mode === 'forgot' ? '/forgot-password' : mode === 'reset' ? '/reset-password/' + encodeURIComponent(values.token) : '/account' %>">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <% if (mode === 'signup' || mode === 'account') { %>
+      <div class="form-field"><label for="name">Your name</label><input id="name" name="name" value="<%= values.name || '' %>" required maxlength="80" autocomplete="name"></div>
+    <% } %>
+    <% if (['signup', 'login', 'forgot', 'account'].includes(mode)) { %>
+      <div class="form-field"><label for="email">Email address</label><input type="email" id="email" name="email" value="<%= values.email || '' %>" required maxlength="254" autocomplete="email" <%= mode === 'account' ? 'readonly' : '' %>></div>
+    <% } %>
+    <% if (['signup', 'login', 'reset'].includes(mode)) { %>
+      <div class="form-field"><label for="password">Password</label><input type="password" id="password" name="password" required <%= mode !== 'login' ? 'minlength=12' : '' %> maxlength="128" autocomplete="<%= mode === 'login' ? 'current-password' : 'new-password' %>"><small><%= mode === 'login' ? 'Use your account password.' : 'Use 12–128 characters. A long, unique passphrase works well.' %></small></div>
+    <% } %>
+    <% if (['signup', 'reset'].includes(mode)) { %><div class="form-field"><label for="confirmPassword">Confirm password</label><input type="password" id="confirmPassword" name="confirmPassword" required minlength="12" maxlength="128" autocomplete="new-password"></div><% } %>
+    <button type="submit" class="submit-listing-btn"><%= mode === 'signup' ? 'Create account' : mode === 'login' ? 'Log in' : mode === 'forgot' ? 'Email reset link' : mode === 'reset' ? 'Save new password' : 'Save profile' %></button>
+  </form>
+  <% if (mode === 'login') { %><p><a href="/forgot-password">Forgot your password?</a></p><p>New here? <a href="/signup">Create an account</a></p><% } %>
+  <% if (mode === 'signup' || mode === 'forgot' || mode === 'reset') { %><p><a href="/login">Back to login</a></p><% } %>
+  <% if (mode === 'account') { %>
+    <h2>Change password</h2><p>Changing your password signs you out on every device.</p>
+    <form class="listing-form" method="POST" action="/account/password"><input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <div class="form-field"><label for="currentPassword">Current password</label><input id="currentPassword" name="currentPassword" type="password" required maxlength="128" autocomplete="current-password"></div>
+      <div class="form-field"><label for="newPassword">New password</label><input id="newPassword" name="password" type="password" required minlength="12" maxlength="128" autocomplete="new-password"></div>
+      <div class="form-field"><label for="confirmNewPassword">Confirm new password</label><input id="confirmNewPassword" name="confirmPassword" type="password" required minlength="12" maxlength="128" autocomplete="new-password"></div>
+      <button class="submit-listing-btn">Change password and sign out</button>
+    </form>
+  <% } %>
+</main><%- include('partials/footer') %></body></html>

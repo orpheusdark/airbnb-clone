@@ -1,0 +1,13 @@
+<!DOCTYPE html><html lang="en"><%- include('partials/head', { title: 'Review your reservation' }) %><body><%- include('partials/navbar') %>
+<main class="form-page"><p class="eyebrow">ONE STEP FROM YOUR NEXT STAY</p><h1>Review your reservation</h1>
+  <section class="checkout-summary"><h2><%= listing.title %></h2><p><%= listing.location %>, <%= listing.country %></p>
+    <dl class="summary-list"><dt>Check-in</dt><dd><%= date(stay.checkIn) %></dd><dt>Check-out</dt><dd><%= date(stay.checkOut) %></dd><dt>Guests</dt><dd><%= stay.guests %></dd><dt><%= stay.nights %> night<%= stay.nights === 1 ? '' : 's' %> × <%= money(stay.nightlyPaise) %></dt><dd><%= money(stay.totalPaise) %></dd><dt>Total (INR)</dt><dd><strong><%= money(stay.totalPaise) %></strong></dd></dl>
+    <p>Your dates are secured after confirmation. The total shown includes the nightly accommodation price.</p>
+  </section>
+  <form class="listing-form" method="POST" action="<%= paymentEnabled && stay.totalPaise > 0 ? "/payments/order" : "/bookings" %>"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><input type="hidden" name="key" value="<%= key %>">
+    <h2><%= paymentEnabled && stay.totalPaise > 0 ? "Payment" : "Confirm your stay" %></h2><p><%= paymentEnabled && stay.totalPaise > 0 ? "Continue to secure checkout to complete your reservation." : "No payment is collected when you confirm this reservation." %></p>
+    <p>Cancel before your check-in date from My trips. On and after check-in, cancellation is unavailable.</p>
+    <button class="submit-listing-btn"><%= paymentEnabled && stay.totalPaise > 0 ? "Continue to payment" : "Confirm reservation" %> · <%= money(stay.totalPaise) %></button>
+    <a class="back-link" href="/listings/<%= listing._id %>">Change dates or cancel checkout</a>
+  </form>
+</main><%- include('partials/footer') %></body></html>

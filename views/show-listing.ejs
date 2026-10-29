@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title><%= listing.title %> | airbnb</title>
+    <title><%= listing.title %> | Airbnb</title>
     <link rel="stylesheet" href="/css/style.css" />
   </head>
   <body>
@@ -28,10 +28,10 @@
         </p>
       </header>
 
-      <div class="listing-actions"><a class="create-listing-btn" href="/listings/<%= listing._id %>/edit">Edit property</a><a class="delete-link" href="/listings/<%= listing._id %>/delete">Delete property</a></div>
+      <% const isOwner = currentUser && String(listing.owner) === String(currentUser._id); %><% if (isOwner) { %><div class="listing-actions"><a class="create-listing-btn" href="/listings/<%= listing._id %>/edit">Edit property</a><a class="delete-link" href="/listings/<%= listing._id %>/delete">Delete property</a></div><% } %>
       <section class="detail-gallery">
         <img
-          src="<%= listing.image || 'https://placehold.co/1200x800?text=airbnb' %>"
+          src="<%= photoFor(listing) %>"
           alt="<%= listing.title %>"
         />
         <span class="gallery-label">PROPERTY GALLERY</span>
@@ -40,13 +40,13 @@
       <section class="detail-content">
         <article class="detail-description">
           <p class="eyebrow">THE PROPERTY</p>
-          <h2>Make yourself at home.</h2>
+          <h2>Make yourself at home.</h2><p>Hosted by <%= owner?.name || "a host awaiting account setup" %> · <%= listing.category || "Home" %></p><p><%= listing.maxGuests || 2 %> guests · <%= listing.bedrooms ?? 1 %> bedrooms · <%= listing.bathrooms || 1 %> bathrooms</p>
           <p><%= listing.description %></p>
 
           <div class="detail-divider"></div>
 
-          <h3>Location</h3>
-          <p><%= listing.location %>, <%= listing.country %></p>
+          <h3>What this place offers</h3><ul class="amenity-list"><% (listing.amenities || []).forEach(amenity => { %><li><%= amenity %></li><% }) %></ul><% if (!(listing.amenities || []).length) { %><p>No amenities specified.</p><% } %><h3>Location</h3>
+          <p><%= listing.location %>, <%= listing.country %></p><a href="https://www.google.com/maps/search/?api=1&query=<%= encodeURIComponent(listing.location + ', ' + listing.country) %>" target="_blank" rel="noopener noreferrer">View area on Google Maps ↗</a>
         </article>
 
         <aside class="booking-card">
@@ -60,20 +60,27 @@
             <span>Ready for your next getaway</span>
           </div>
 
-          <button
-            class="booking-btn"
-            type="button"
-            disabled
-            title="Booking functionality is coming later"
-          >
-            Booking coming soon
-          </button>
-
-          <p class="booking-disclaimer">
-            This is a project demo. No reservation or payment is processed.
-          </p>
+          <% if (!listing.owner) { %><p>The host must activate this property before it can be booked.</p>
+          <% } else if (isOwner) { %><p>This is your property. View guest reservations in your <a href="/host">host dashboard</a>.</p>
+          <% } else { %>
+          <form method="POST" action="/listings/<%= listing._id %>/checkout">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <div class="form-field"><label for="arrival">Check-in</label><input id="arrival" name="checkIn" type="date" min="<%= today %>" required></div>
+            <div class="form-field"><label for="departure">Check-out</label><input id="departure" name="checkOut" type="date" min="<%= today %>" required></div>
+            <div class="form-field"><label for="partySize">Guests</label><input id="partySize" name="guests" type="number" min="1" max="<%= listing.maxGuests || 2 %>" value="1" required></div>
+            <button class="submit-listing-btn"><%= currentUser ? 'Review reservation' : 'Log in to reserve' %></button>
+          </form><% } %>
+          <p class="booking-disclaimer">Cancel before your check-in date. Your total is shown before confirmation.</p>
+          <% if (occupied.length) { %><details class="reserved-dates"><summary>View reserved nights</summary><p><%= occupied.map(night => date(night.date)).join(', ') %></p></details><% } %>
+          <% if (currentUser) { const saved = currentUser.favorites.some(id => String(id) === String(listing._id)); %><form class="save-form" method="POST" action="/listings/<%= listing._id %>/save"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><input type="hidden" name="action" value="<%= saved ? 'remove' : 'save' %>"><button class="secondary-btn"><%= saved ? '♥ Remove from saved' : '♡ Save this property' %></button></form><% } else { %><p><a href="/login">Log in to save this property</a></p><% } %>
         </aside>
       </section>
+      <section id="reviews" class="reviews-section"><h2>Guest reviews <%= average ? '· ' + average + ' / 5' : '' %></h2><p><%= reviews.length %> review(s)</p>
+        <% if (!reviews.length) { %><p>No reviews yet. Guests can leave a review after completing a stay.</p><% } %>
+        <% reviews.forEach(review => { %><article class="review-card"><h3><%= review.author?.name || 'Guest' %> · <%= review.rating %> / 5</h3><small><%= date(review.createdAt) %></small><p><%= review.comment %></p></article><% }) %>
+        <% if (mayReview) { const ownReview = reviews.find(review => String(review.author?._id) === String(currentUser._id)); %><h3><%= ownReview ? 'Update your review' : 'Share your experience' %></h3><form class="listing-form" method="POST" action="/listings/<%= listing._id %>/reviews"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><div class="form-field"><label for="rating">Rating</label><select id="rating" name="rating" required><% for (let star = 5; star >= 1; star--) { %><option value="<%= star %>" <%= ownReview?.rating === star ? 'selected' : '' %>><%= star %> stars</option><% } %></select></div><div class="form-field"><label for="comment">Your review</label><textarea id="comment" name="comment" rows="4" required maxlength="2000"><%= ownReview?.comment || '' %></textarea></div><button class="submit-listing-btn">Save review</button></form>
+        <% if (ownReview) { %><form class="save-form" method="POST" action="/listings/<%= listing._id %>/reviews/delete"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button class="secondary-btn">Delete my review</button></form><% } %><% } %>
+      </section>
     </main>
-  </body>
+  <%- include('partials/footer') %></body>
 </html>

@@ -1,0 +1,11 @@
+<!DOCTYPE html><html lang="en"><%- include('partials/head', { title: cancelling ? 'Cancel reservation' : 'Reservation details' }) %><body><%- include('partials/navbar') %>
+<main class="form-page"><a href="/trips" class="back-link">← My trips</a><% if (notice) { %><p class="success-notice" role="status"><%= notice %></p><% } %>
+<h1><%= cancelling ? 'Cancel this reservation?' : 'Your reservation' %></h1><section class="checkout-summary"><span class="status-badge"><%= booking.status %></span><h2><%= booking.title %></h2><p><%= booking.location %></p>
+<dl class="summary-list"><dt>Reference</dt><dd class="reference"><%= booking._id %></dd><dt>Check-in</dt><dd><%= date(booking.checkIn) %></dd><dt>Check-out</dt><dd><%= date(booking.checkOut) %></dd><dt>Guests</dt><dd><%= booking.guests %></dd><dt>Nightly price</dt><dd><%= money(booking.nightlyPaise) %></dd><dt>Total for <%= booking.nights %> nights</dt><dd><%= money(booking.totalPaise) %></dd></dl>
+<p><strong>Payment:</strong> <%= booking.payment === 'test-paid' ? 'Test payment confirmed · No real charge' : booking.payment === 'test-refunded' ? 'Test payment reversed' : booking.payment === 'refund-pending' ? 'Reversal pending' : 'Not collected' %></p></section>
+<% if (booking.status === 'confirmed' && date(booking.checkIn) > today) { %>
+  <% if (cancelling) { %><form method="POST" action="/trips/<%= booking._id %>/cancel" class="listing-form"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><p>Cancelling releases these dates for other guests. This cannot be undone.</p><button class="submit-listing-btn">Yes, cancel reservation</button><a href="/trips/<%= booking._id %>" class="back-link">Keep my reservation</a></form>
+  <% } else { %><a href="/trips/<%= booking._id %>/cancel" class="delete-link">Cancel reservation</a><% } %>
+<% } else if (booking.status === 'confirmed') { %><p>This stay has started or finished; it can no longer be cancelled.</p><% } %>
+<p><a href="/listings/<%= booking.listing %>">View property and reviews</a></p>
+</main><%- include('partials/footer') %></body></html>

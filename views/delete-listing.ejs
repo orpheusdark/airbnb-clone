@@ -5,12 +5,12 @@
 <%- include('partials/navbar.ejs') %>
 <main class="form-page">
   <h1>Delete this property?</h1>
-  <p><strong><%= listing.title %></strong> in <%= listing.location %>, <%= listing.country %> will be permanently removed.</p>
-  <p>This action cannot be undone.</p>
+  <p><strong><%= listing.title %></strong> in <%= listing.location %>, <%= listing.country %> will be removed from public listings.</p>
+  <p>Existing booking history will be preserved. Properties with upcoming or active reservations cannot be removed.</p>
   <form class="listing-form" method="POST" action="/listings/<%= listing._id %>/delete">
     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
     <button class="submit-listing-btn" type="submit">Yes, delete property</button>
     <a class="back-link" href="/listings/<%= listing._id %>">Cancel and keep property</a>
   </form>
 </main>
-</body></html>
+<%- include('partials/footer') %></body></html>

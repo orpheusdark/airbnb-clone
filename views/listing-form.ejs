@@ -101,18 +101,22 @@
             type="url"
             id="image"
             name="image" maxlength="2048"
-            value="<%= values.image ?? '' %>"
+            value="<%= values.image?.startsWith('/images/') ? '' : values.image || '' %>"
             placeholder="https://example.com/property.jpg"
           />
-          <small>Use a publicly accessible image URL.</small>
+          <small>Use a public HTTP/HTTPS image URL. When editing, leave blank to keep the current image.</small><% if (id) { %><label class="checkbox-label"><input type="checkbox" name="removeImage" value="yes"> Use the property type photo</label><% } %>
         </div>
 
+        <div class="form-row"><div class="form-field"><label for="category">Property type</label><select id="category" name="category"><% categories.forEach(category => { %><option <%= (values.category || 'Home') === category ? 'selected' : '' %>><%= category %></option><% }) %></select></div><div class="form-field"><label for="maxGuests">Maximum guests</label><input id="maxGuests" name="maxGuests" type="number" min="1" max="30" required value="<%= values.maxGuests ?? 2 %>"></div></div>
+        <div class="form-row"><div class="form-field"><label for="bedrooms">Bedrooms</label><input id="bedrooms" name="bedrooms" type="number" min="0" max="30" required value="<%= values.bedrooms ?? 1 %>"></div><div class="form-field"><label for="bathrooms">Bathrooms</label><input id="bathrooms" name="bathrooms" type="number" min="1" max="30" required value="<%= values.bathrooms ?? 1 %>"></div></div>
+        <fieldset class="amenities"><legend>Amenities</legend><% amenities.forEach(amenity => { %><label class="checkbox-label"><input type="checkbox" name="amenities" value="<%= amenity %>" <%= (values.amenities || []).includes(amenity) ? 'checked' : '' %>><%= amenity %></label><% }) %></fieldset>
         <button class="submit-listing-btn" type="submit">
           <%= id ? "Save changes" : "Publish property" %> <span aria-hidden="true">→</span>
         </button>
 
         <a class="back-link" href="<%= id ? "/listings/" + id : "/listings" %>">Cancel</a><p class="form-footnote">Check your details before publishing.</p>
       </form>
+      <% if (id) { %><section class="image-upload"><h2>Upload a property photo</h2><p>JPEG, PNG or WebP, up to 5 MB. Uploading replaces the current photo. Save any property edits before uploading.</p><form class="listing-form" method="POST" enctype="multipart/form-data" action="/listings/<%= id %>/image"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><div class="form-field"><label for="photo">Photo</label><input type="file" id="photo" name="photo" accept="image/jpeg,image/png,image/webp" required></div><button class="submit-listing-btn">Upload photo</button></form></section><% } %>
     </main>
-  </body>
+  <%- include('partials/footer') %></body>
 </html>
