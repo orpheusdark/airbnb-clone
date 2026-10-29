@@ -158,3 +158,37 @@ An invalid ID and a nonexistent listing are different situations: the former is 
 - Escaped EJS output keeps submitted HTML from becoming executable markup.
 - Signed double-submit form tokens protect against cross-site submissions; they do not authenticate users or prove ownership.
 - An app factory allows HTTP tests with an isolated data source, while startup connects to MongoDB separately.
+
+## Authentication and transactional reservations
+
+- Passwords are salted and hashed with asynchronous scrypt; the application never stores plaintext passwords.
+- A MongoDB-backed server session stores the authenticated user ID. Login regenerates the session ID to prevent fixation.
+- A user's authentication version invalidates old sessions after password changes or resets.
+- Password reset tokens are random, hashed in storage, expire after 30 minutes and are consumed atomically.
+- Authorization is a server-side owner comparison. Hiding an edit button alone does not protect a route.
+- Each booking night has a unique `(listing, date)` index. Transactions commit the reservation and occupied nights together or roll them all back.
+- A listing write in the booking transaction serializes checkout with property archival and concurrent property changes.
+- Payment totals are calculated using integer paise and checked again at confirmation. Client-submitted totals are not trusted.
+- An idempotency key prevents repeated checkout submission from creating extra reservations.
+- Transactional cancellation releases nights and updates reservation status atomically.
+- A completed confirmed stay is required before a guest may review a property.
+- Uploaded image types are checked by file signatures and are served with explicit types and security headers.
+- Tests use a temporary replica set so transactional and race behavior can be verified without altering the application database.
+
+## Payment orders and verification
+
+- A payment provider's browser success callback is not sufficient proof of payment.
+- Create the order on the server with the server-calculated amount in paise, and persist its association with the guest and checkout.
+- Verify `HMAC-SHA256(order_id + "|" + payment_id, key_secret)` against the callback signature using a constant-time comparison.
+- Fetch the payment from the provider and verify the order ID, currency, amount and capture state.
+- Payment and inventory operations span different systems. If reservation creation cannot succeed after capture, request a reversal and record its state.
+- Repeated callbacks must return the same reservation. They must not create extra bookings or repeated charges.
+- Keep database-backed attempts so a browser/network interruption can be retried.
+- Accept only test keys until live payments have the necessary provider activation, webhook reconciliation and operational controls.
+- Keep payment facts separate from visual branding: public navigation can be polished while receipts still report accurate financial status.
+
+## Property photography and documentation
+
+- Bundle licensed category photos locally for reliable image delivery, and preserve host-provided URLs/uploads.
+- Record image sources and licensing separately from product marketing copy.
+- Keep the README focused on product capabilities, installation, architecture and operations; keep implementation decisions and explanations in the development log and technical notes.

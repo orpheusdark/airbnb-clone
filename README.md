@@ -1,66 +1,152 @@
 # Airbnb Clone
 
-A property listing demo built with Node.js, Express 5, MongoDB/Mongoose, EJS and custom HTML/CSS. All existing styling is retained; no frontend framework is required.
+A full-stack accommodation booking platform with guest accounts, property hosting, availability search, reservations, reviews and secure checkout integration. Built with **Node.js, Express, MongoDB, Mongoose, EJS and custom HTML/CSS**.
 
 ## Features
 
-- Browse properties, view details, and add a property.
-- Edit a property using a prefilled form.
-- Delete a property through an explicit confirmation page; cancel keeps it intact.
-- Shared create/edit validation, preserved input on errors, and success messages.
-- Model validation and an allowlist of writable fields.
-- Signed form tokens to prevent cross-site form submissions.
-- Friendly 400, 403, 404, 413 and 500 responses without database details.
-- Responsive layouts, keyboard focus states, and escaped user content.
+- Account registration, login/logout and persistent server sessions.
+- Profile management, password changes and expiring password recovery links.
+- Property creation and owner-authorized editing, removal and photo uploads.
+- Guest capacity, bedroom/bathroom counts, property categories and amenities.
+- Location/title search, price/type/guest/availability filters, sorting and pagination.
+- Saved properties, guest trip management and a host reservation dashboard.
+- Server-calculated pricing, transactional reservations and overlap prevention.
+- Razorpay checkout, payment verification, repeat-submission protection and payment reversal handling.
+- Future reservation cancellation with immediate availability updates.
+- Verified-stay reviews with author-only updates/removal and average ratings.
+- Responsive layouts, bundled property photography and area links to Google Maps.
 
-## Run locally
+## Requirements
 
-1. Install Node.js 20.19+ (Node.js 24 recommended) and provide MongoDB locally or through Atlas.
-2. Run `npm ci`.
-3. Copy `.env.example` to `.env` and set `MONGODB_URI`. For Atlas, configure a database user and allow your machine's IP address. Never commit the connection string.
-4. Run `npm start`, or `npm run dev` for automatic restarts.
-5. Open `http://localhost:3000`. Set `PORT` in `.env` to change the port.
+- Node.js 20.19 or newer; Node.js 24 recommended.
+- MongoDB Atlas or a MongoDB replica set. Multi-document transactions are required.
+- SMTP access for password recovery email delivery.
+- Razorpay test API keys to enable online checkout.
 
-The server starts after the database connects. Invalid environment settings or unavailable MongoDB cause startup to fail without logging credentials. Run one application instance: form tokens use a per-process signing key, so restarts invalidate open forms.
+## Installation
 
-## Validation
+```text
+npm ci
+```
 
-Title, location and country: required, trimmed, up to 100 characters. Description: required, trimmed, up to 2,000 characters. Price: 0–100,000,000 INR with up to two decimal places. Optional image: HTTP/HTTPS URL up to 2,048 characters without embedded credentials. Leaving the image blank uses a placeholder, including when editing. Images are remote links; their availability is outside this app's control.
+Copy `.env.example` to `.env`, configure the database and session secret, then start the server:
 
-## Routes
+```text
+npm start
+```
 
-| Method | Path | Purpose |
-| --- | --- | --- |
-| GET | `/` | Redirect to listings |
-| GET | `/listings` | Browse |
-| GET | `/listings/new` | Creation form |
-| POST | `/listings` | Create |
-| GET | `/listings/:id` | Property details |
-| GET | `/listings/:id/edit` | Prefilled edit form |
-| POST | `/listings/:id/edit` | Save changes |
-| GET | `/listings/:id/delete` | Confirm deletion |
-| POST | `/listings/:id/delete` | Delete |
+For development with automatic restarts:
 
-POST requests require the form's `_csrf` value and matching cookie. Successful writes redirect with HTTP 303 so refresh does not resubmit the form. GET requests do not change stored data.
+```text
+npm run dev
+```
 
-## Tests
+Open `http://localhost:3000`. Create a host account, add a property, then use a separate account/browser profile to book it.
 
-Run `npm test`. The Node test runner exercises validation, Mongoose schema validation, rendered EJS pages, the complete create/edit/delete HTTP lifecycle, confirmation/cancel links, missing and invalid IDs, cross-site form rejection, escaping, oversized forms, static assets, and database failure responses.
+### Database configuration
 
-HTTP tests use an isolated in-memory repository double. They do not connect to MongoDB or change your real listings. They verify route behavior and update options, but are not a live MongoDB persistence test.
+Atlas supports the transactions used by reservations, cancellation, property archival and image updates. For local MongoDB, initialize a replica set named `rs0` and use a connection such as:
 
-Manual check with MongoDB running: add a disposable property, verify it in the grid/details, edit it, restart the app and verify persistence, cancel deletion, then confirm deletion. Check layout on a narrow screen and navigate the forms using the keyboard.
+```text
+mongodb://127.0.0.1:27017/airbnb_clone?replicaSet=rs0
+```
 
-## Structure
+A standalone MongoDB instance does not support these operations. The server waits for the database and required unique indexes before accepting requests.
 
-- `app.js`: app factory, routes, form protection, errors and startup.
-- `models/listing.js`: MongoDB schema.
-- `validation/listing.js`: shared input validation and normalization.
-- `views/`: custom EJS pages and navigation.
-- `public/css/style.css`: responsive custom styles.
-- `test/listings.test.js`: automated checks.
-- [Development log](docs/dev-log.md) and [learning notes](docs/learning-notes.md).
+### Environment variables
 
-## Scope and remaining work
+| Variable | Description |
+| --- | --- |
+| `MONGODB_URI` | Atlas or replica-set connection string |
+| `SESSION_SECRET` | Unique random secret of at least 32 characters |
+| `PORT` | HTTP port; default `3000` |
+| `NODE_ENV` | `development` or `production` |
+| `APP_URL` | Application base URL; used in recovery emails |
+| `TRUST_PROXY` | Set `1` only behind one trusted reverse proxy |
+| `SMTP_HOST`, `SMTP_PORT` | Mail server; port `465` enables TLS |
+| `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM` | Mail authentication and sender |
+| `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` | Razorpay test-mode key pair |
 
-This is a listing-management submission demo. There is no login or ownership enforcement: every visitor can edit or delete any listing. Use sample data in a controlled environment. Authentication/authorization is required before exposing it as a public multi-user service. Reservations, payments, reviews, search/filtering, image uploads and production deployment are not implemented. The booking button explicitly explains that no booking or payment is processed.
+Keep `.env` private. The repository includes only an empty configuration example. Production requires a session secret and HTTPS; configure the trusted proxy explicitly when applicable. A temporary key is allowed only during development and invalidates sessions on restart.
+
+## Payments
+
+Online checkout uses Razorpay Standard Checkout with server-created orders. The server validates the callback signature, fetches payment details, checks the order/currency/amount and confirms capture before creating the reservation. If the selected dates or price change before reservation confirmation, the integration requests a reversal. Successful reservation callbacks are idempotent.
+
+The integration currently accepts **Razorpay test-mode keys only** (`rzp_test_`). Live keys are rejected. Generate your own keys from [Razorpay API settings](https://razorpay.com/docs/payments/dashboard/account-settings/api-keys/) and add them to the private environment file. Card information stays within Razorpay checkout. Test-payment status appears on the secure checkout and financial receipt pages.
+
+Without payment credentials, guests can confirm reservations without an online payment; the receipt accurately shows **Not collected**. A reservation is never presented as paid merely because it was created. Zero-price reservations skip online payment.
+
+A configured payment reserves dates only after verification. If verification/reversal is interrupted, retry the verification flow; failed reversals remain pending. This integration uses synchronous verification and retry handling rather than asynchronous payment webhooks. A live-money rollout requires provider activation, webhook reconciliation, operational refund monitoring and a separate production review.
+
+## Accounts and ownership
+
+Passwords use salted scrypt hashes. MongoDB stores the authenticated session. Login rotates the session ID, and password changes/resets revoke older sessions. Recovery links expire after 30 minutes and can be used once. Without SMTP configuration, the recovery form reports that email delivery is unavailable; registration and login continue to work.
+
+Only the property owner can edit, remove or upload images to a listing. Existing properties without an owner remain visible but are protected from management and booking until explicitly assigned.
+
+After creating the intended host account, preview ownership assignment:
+
+```text
+npm run assign-listings -- --email YOUR_ACCOUNT_EMAIL
+```
+
+Append `--apply` to assign only unowned properties. Existing ownership is preserved. To add an initial property collection without replacing current data:
+
+```text
+npm run seed -- --email YOUR_ACCOUNT_EMAIL
+```
+
+## Reservation rules
+
+- Prices use INR and integer paise for calculations.
+- Choose 1–90 nights with check-in within one year.
+- Dates represent midnight UTC; the checkout date is not an occupied night.
+- Guest count cannot exceed the property's capacity.
+- A unique property/date index prevents overlapping reservations inside a transaction.
+- A changed price requires reviewing a fresh quote.
+- Guests may cancel before the check-in date. Cancelled nights become available again.
+- Property removal archives the listing and retains reservation history. Upcoming or active stays prevent removal.
+- A guest must complete a confirmed stay before reviewing. Hosts cannot review their own properties.
+- Saved properties are limited to 200 per account. The host dashboard displays the latest 100 reservations.
+
+## Photos
+
+Upload one JPEG, PNG or WebP photo of up to 5 MB from the property edit page, or supply an external HTTP/HTTPS URL. Uploads are checked by file signature and stored in MongoDB. Leaving the URL blank during editing keeps the existing photo. The property-type image option selects a bundled photograph.
+
+Bundled photographs are stored under `public/images/stays/` and remain available without an external image request. See [image credits](docs/image-credits.md) for sources and licensing.
+
+## Verification
+
+```text
+npm test
+npm audit
+```
+
+The test suite starts an isolated MongoDB replica set and does not change the application database. It covers account flows, authorization, CSRF, validation, search, pagination, favorites, uploads, reservation races, pricing changes, cancellation, verified reviews, password recovery, session persistence and payment verification/reversal behavior. Provider calls are mocked; completing a provider transaction requires your configured test account.
+
+The first test run downloads MongoDB 8.0.17, which is a large download on Windows. Later runs use the cache. `MONGOMS_SYSTEM_BINARY` can point to a compatible installed `mongod` binary instead.
+
+See the [acceptance checklist](docs/submission-checklist.md) for a complete browser walkthrough.
+
+## Architecture
+
+| Location | Responsibility |
+| --- | --- |
+| `app.js` | Middleware, security headers, sessions, startup and error handling |
+| `routes/auth.js` | Registration, authentication, account and recovery flows |
+| `routes/stays.js` | Properties, search, favorites, trips, hosting and reviews |
+| `routes/payments.js` | Payment orders, verification and reversal handling |
+| `lib/booking.js` | Dates, pricing and transactional reservation operations |
+| `lib/security.js` | Password hashing, session helpers and authorization |
+| `lib/payments.js` | Razorpay API adapter and signature verification |
+| `models/` | Users, listings, bookings, nightly availability, reviews, photos and payment attempts |
+| `views/`, `public/` | Server-rendered pages, custom styles and static assets |
+| `scripts/` | Ownership migration and initial property collection |
+| `test/` | Unit and MongoDB integration tests |
+
+## Deployment
+
+Configure HTTPS, a stable session secret, Atlas, the public application URL and SMTP. Set `NODE_ENV=production` and configure `TRUST_PROXY` only for the actual proxy topology. The application does not automatically publish a deployment.
+
+The current implementation uses per-process request rate limits. Multi-instance hosting requires a shared limiter and operational monitoring. Additional roadmap items include email verification, social login, messaging, multi-photo galleries, map embedding, administrative moderation and account/data-retention controls.

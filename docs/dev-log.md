@@ -163,3 +163,66 @@ Never commit database connection strings, API keys, passwords, or other secrets.
 - `npm test`: all three automated groups passed, including HTTP lifecycle and failure assertions.
 - Connected to the configured MongoDB database, sent a ping, queried listings and rendered `/listings` successfully. This check was read-only.
 - Live database create/update/delete persistence and visual browser review were not performed.
+
+## Complete booking application — 29 October 2026
+
+### Implemented
+- Added account signup/login/logout, profile updates, password changes and expiring single-use reset links.
+- Passwords use salted scrypt hashes; sessions are stored in MongoDB and rotated on login.
+- Added ownership checks to listing edits, removal and image uploads; legacy listings require explicit owner assignment.
+- Added guest limits, bedrooms/bathrooms, property types and amenities.
+- Added search, price/type/guest/date filtering, sorting and pagination.
+- Added saved properties, a host dashboard and guests' trip pages.
+- Added server-calculated quotes and explicitly acknowledged demo checkout; no real charges or card data.
+- Bookings reserve each night inside a database transaction. A unique property/date index prevents overlap even when two guests book simultaneously.
+- Added future-trip cancellation, releasing occupied nights transactionally.
+- Added completed-stay reviews, including authors' updates/deletion and aggregate detail-page ratings.
+- Added bounded JPEG/PNG/WebP uploads stored in MongoDB and an external area-map link.
+- Property removal now archives the listing and preserves booking history; active/upcoming reservations prevent archival.
+- Added CSRF checks, security headers, request/authentication limits, and explicit field allowlists.
+- Added safe sample-data and legacy ownership scripts, environment documentation and a submission walkthrough.
+- Updated the vulnerable transitive body-parser dependency through a compatible security patch.
+
+### Validation
+- Exercised the real Express application against an isolated MongoDB replica set, including concurrent checkout.
+- Tested signup/login, duplicate accounts, authorization, CSRF, listing validation, filtering, pagination, favorites, uploads, demo totals, overlap rejection, idempotency, cancellation, reviews, reset reuse/expiry and session revocation.
+- Verified login, checkout review and a confirmed demo booking in the browser using isolated sample data.
+- Checked mobile property and reservation layouts for horizontal overflow.
+- Production database listings were preserved; test reservations and accounts were created only in isolated test/preview databases.
+
+### Configuration still required
+- SMTP credentials and the public app URL are needed for actual recovery-email delivery.
+- The intended host must create their account before running the explicit ownership assignment for legacy properties.
+- Real payments and public deployment are outside this project's demo-payment scope.
+
+## Presentation and checkout refinement — 29 October 2026
+
+### Product presentation
+- Removed learning-project and simulated-reservation banners from public pages.
+- Replaced placeholder imagery with five locally bundled property-category photographs, documented their sources and retained host uploads.
+- Added property-category navigation, a four-column desktop grid and Airbnb's coral accent while preserving the custom EJS/CSS implementation.
+- Rewrote the README as professional product, installation, architecture and operations documentation.
+
+### Payment integration
+- Selected Razorpay's test environment after reviewing its current official integration and API-key documentation.
+- Added server-created payment orders, stored checkout attempts and a browser checkout launcher.
+- Verified provider signatures with HMAC-SHA256 using the server-stored order ID.
+- Checked provider amount, INR currency, order association and capture status before reserving dates.
+- Added repeat-callback protection, confirmation recovery and reversal handling when a paid checkout cannot reserve its stay.
+- Added cancellation reversal states and retry handling.
+- Kept receipt statuses accurate: uncollected reservations are not reported as paid; provider test transactions retain their financial status.
+- Added environment variables for the user's own test keys and rejected live keys to prevent accidental real charges.
+
+### Verification and remaining setup
+- Payment adapter and callback checks use a mocked provider; no real provider credentials were supplied or committed.
+- The full integration suite covers reservation races, payment mismatch/signature rejection, callback replay and reversal paths.
+- SMTP credentials are still needed for actual password recovery delivery.
+- The intended owner email was supplied privately; account signup must precede explicit ownership assignment.
+
+### Final verification
+- `npm ci` completed in the user's existing repository with no known dependency vulnerabilities.
+- `npm test` passed all 14 reported tests, including real MongoDB transaction races and mocked-provider checkout/reversal checks.
+- Confirmed all bundled listing photographs load in the browser.
+- Verified the compact search/category layout on desktop and the mobile layout without horizontal page overflow.
+- Removed the unused creation-only template in favor of the shared validated create/edit form.
+- Separated completed work into meaningful account/data, application-flow, and documentation commits with plain-language messages.
