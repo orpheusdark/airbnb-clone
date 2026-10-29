@@ -146,3 +146,15 @@ An invalid ID and a nonexistent listing are different situations: the former is 
 - A reusable helper reduces repeated response code.
 - The fallback 404 route must be registered after the application's regular routes.
 - Error messages shown to visitors should not reveal database connection strings, stack traces, or other internal details.
+
+## Editing, deletion and form safety
+
+- HTML forms use POST endpoints to save changes or confirm deletion. GET only displays pages.
+- A deletion confirmation page makes cancellation possible without JavaScript.
+- A 303 redirect after successful writes prevents accidental resubmission on refresh.
+- Validate request shapes before converting values: whitespace prices and arrays must not become valid numbers.
+- Explicitly select writable fields rather than passing the entire request body to MongoDB.
+- Mongoose update validators must be enabled for update operations.
+- Escaped EJS output keeps submitted HTML from becoming executable markup.
+- Signed double-submit form tokens protect against cross-site submissions; they do not authenticate users or prove ownership.
+- An app factory allows HTTP tests with an isolated data source, while startup connects to MongoDB separately.

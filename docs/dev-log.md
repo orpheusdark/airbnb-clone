@@ -145,3 +145,21 @@ Never commit database connection strings, API keys, passwords, or other secrets.
 - No centralized Express error-handling middleware yet.
 - No automated tests for routes or validation.
 - No authentication, booking, or payment functionality.
+
+## Listing management completion — 29 October 2026
+
+- Added prefilled editing and a separate delete confirmation page, with cancel links.
+- Shared create/edit validation preserves input and reports actionable errors.
+- Added model constraints, explicit update fields, signed form tokens and POST/redirect/GET flows.
+- Home now opens the listings experience; create, update and delete display success feedback.
+- Centralized unexpected errors and handled oversized forms without exposing internals.
+- Exported an app factory for HTTP testing independently of MongoDB startup.
+- Added automated validation, schema and HTTP lifecycle tests using an isolated repository double.
+- Added run/test scripts, a safe environment example and setup/submission documentation.
+- Remaining: authentication and ownership, real reservations/payments, reviews, search, uploads and deployment. Automated HTTP tests do not prove live database persistence.
+
+### Verification performed
+
+- `npm test`: all three automated groups passed, including HTTP lifecycle and failure assertions.
+- Connected to the configured MongoDB database, sent a ping, queried listings and rendered `/listings` successfully. This check was read-only.
+- Live database create/update/delete persistence and visual browser review were not performed.
