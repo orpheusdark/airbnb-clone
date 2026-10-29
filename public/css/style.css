@@ -3940,3 +3940,5 @@ dialog::backdrop {
     font-size: 12px;
   }
 }
+
+.payment-test-help{margin:24px 0;padding:18px 22px;border:1px solid #ddd;border-radius:14px;line-height:1.65}.payment-test-help summary{cursor:pointer;font-weight:650}.payment-test-help ol{padding-left:22px}.payment-test-help li{margin:10px 0}.payment-test-help a{text-decoration:underline}

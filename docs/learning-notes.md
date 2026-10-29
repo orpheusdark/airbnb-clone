@@ -226,3 +226,8 @@ An invalid ID and a nonexistent listing are different situations: the former is 
 - Only display ratings calculated from real review records. Do not add fabricated scores or trust badges for appearance.
 - Optional gallery data lets the same component display a single cover or several photos without duplicating images.
 - Browser testing catches DOM behavior that HTTP tests cannot, while isolated database tests protect booking and authorization rules.
+
+### Sandbox authentication and callback ordering
+
+A created payment is not an authorised payment. Test bank authentication still needs the Success action or a valid test OTP. A checkout dismissal callback can arrive after the success handler; guard the successful verification state so dismissal cannot overwrite it. Disable duplicate window launches, but restore the launch control when the window fails to open or closes before success.
+

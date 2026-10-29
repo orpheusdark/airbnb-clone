@@ -291,3 +291,8 @@ Never commit database connection strings, API keys, passwords, or other secrets.
 - Confirmed the live property page renders the gallery and the mobile layout fits a 375-pixel content viewport without horizontal page overflow.
 - Saved home, property and mobile-property screenshots under docs/screenshots and added the home preview to the README.
 - Kept the configured Razorpay integration and private environment file intact. The design work did not create a provider payment.
+
+### 29 October 2026 — Razorpay sandbox retries
+
+Inspected recent provider attempts without exposing credentials or customer details: they remained created, with no authorisation or capture. Added current official test card and bank authentication instructions to checkout. Prevented duplicate checkout windows, preserved successful callback verification status on dismissal, and restored retry after a window opening error. Kept server signature, amount, capture and reservation checks intact; no fabricated provider transaction or local success bypass was added.
+

@@ -159,3 +159,10 @@ See the [acceptance checklist](docs/submission-checklist.md) for a complete brow
 Configure HTTPS, a stable session secret, Atlas, the public application URL and SMTP. Set `NODE_ENV=production` and configure `TRUST_PROXY` only for the actual proxy topology. The application does not automatically publish a deployment.
 
 The current implementation uses per-process request rate limits. Multi-instance hosting requires a shared limiter and operational monitoring. Additional roadmap items include email verification, social login, messaging, administrative moderation and account/data-retention controls.
+
+## Completing a Razorpay sandbox payment
+
+Select Cards, enter the official test card 4100 2800 0000 1007, any CVV and a future expiry date. On the test bank page choose Success; if an OTP is requested, enter 123456. Do not use real card details. Confirm the resulting payment under Test mode in the Razorpay dashboard. Failed or abandoned authentication does not confirm a reservation. The checkout page includes these steps and supports reopening after dismissal or a loading failure. Provider availability and bank authentication still determine whether a sandbox attempt succeeds.
+
+Reference: https://razorpay.com/docs/payments/payments/test-card-details/
+
