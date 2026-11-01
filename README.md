@@ -1,4 +1,4 @@
-# Airbnb Clone
+# Stays
 
 A full-stack accommodation booking platform with guest accounts, property hosting, availability search, reservations, reviews and secure checkout integration. Built with **Node.js, Express, MongoDB, Mongoose, EJS and custom HTML/CSS**.
 
@@ -16,7 +16,7 @@ A full-stack accommodation booking platform with guest accounts, property hostin
 - Razorpay checkout, payment verification, repeat-submission protection and payment reversal handling.
 - Future reservation cancellation with immediate availability updates.
 - Verified-stay reviews with author-only updates/removal and average ratings.
-- Airbnb-inspired responsive design with a rounded search bar, account menu, photo-first cards and mobile navigation.
+- Stays responsive design with a rounded search bar, account menu, photo-first cards and mobile navigation.
 - Calendar date-range selection, guest steppers, filter dialogs and instant wishlist feedback.
 - Photo galleries with keyboard navigation, share links, live price previews and an embedded area map.
 - Consistent hosting, account, trip, editor, checkout and receipt interfaces with loading and error states.
@@ -53,7 +53,7 @@ Open `http://localhost:3000`. Create a host account, add a property, then use a 
 Atlas supports the transactions used by reservations, cancellation, property archival and image updates. For local MongoDB, initialize a replica set named `rs0` and use a connection such as:
 
 ```text
-mongodb://127.0.0.1:27017/airbnb_clone?replicaSet=rs0
+mongodb://127.0.0.1:27017/stays?replicaSet=rs0
 ```
 
 A standalone MongoDB instance does not support these operations. The server waits for the database and required unique indexes before accepting requests.

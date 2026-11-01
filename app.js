@@ -79,7 +79,7 @@ function createApp(options = {}) {
   app.locals.sessionStore = store;
   app.use(
     session({
-      name: 'airbnb.sid',
+      name: 'stays.sid',
       secret,
       store,
       resave: false,
@@ -248,7 +248,7 @@ async function startServer() {
   const mailer = createMailService();
   const app = createApp({ sendReset: mailer?.sendReset, notifications: mailer?.notifications });
   const server = app.listen(process.env.PORT || 3000, () =>
-    console.log('Airbnb Clone is running.'),
+    console.log('Stays is running.'),
   );
   mailer?.start();
   server.on('error', async () => {

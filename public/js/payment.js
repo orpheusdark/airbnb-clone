@@ -16,7 +16,7 @@ button.addEventListener('click', () => {
     amount: Number(button.dataset.amount),
     currency: 'INR',
     order_id: button.dataset.order,
-    name: 'Airbnb',
+    name: 'Stays',
     description: button.dataset.title,
     theme: { color: '#ff385c' },
     handler(result) {

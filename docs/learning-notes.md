@@ -243,3 +243,8 @@ The default same-origin opener policy can sever communication with a cross-origi
 ### 1 November 2026 — SMTP and reliable notification boundaries
 
 Google-hosted university accounts can use Gmail SMTP only when their account policy permits the required credentials. Check public MX records to choose the provider; MX records do not prove App Password access is enabled. Use an App Password with TLS and never a normal account password. An SMTP authentication check sends no mail, and SMTP acceptance is not an inbox delivery receipt. Keep password-reset tokens in the direct recovery flow, with only a digest in the account record, rather than copying readable reset links into a durable queue. Suppress generated mailbox identities. Deduplicate booking event enqueueing, retry delivery independently from reservation success and document at-least-once delivery and the business-commit/queue boundary. Quota control must become shared before running multiple workers on different instances.
+
+### Brand changes across application boundaries
+
+Branding includes accessible labels, document titles, checkout merchant names, email copy and the favicon as well as the navbar. Vector assets keep a simple original mark crisp at small sizes. Changing the session cookie name starts a fresh login session; changing a displayed brand does not require moving the database or rewriting the Git remote.
+

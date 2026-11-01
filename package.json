@@ -1,7 +1,7 @@
 {
-  "name": "airbnb-clone",
+  "name": "stays",
   "version": "1.0.0",
-  "description": "Full Stack Project - Airbnb",
+  "description": "Full Stack Project - Stays",
   "main": "app.js",
   "scripts": {
     "dev": "nodemon app.js",

@@ -107,7 +107,7 @@ module.exports = function authRoutes({ sendReset, notifications }) {
   });
   router.post('/logout', async (req, res) => {
     await sessionCall(req, 'destroy');
-    res.clearCookie('airbnb.sid');
+    res.clearCookie('stays.sid');
     res.redirect(303, '/listings');
   });
   router.get('/forgot-password', (req, res) => render(res, 'forgot'));
@@ -176,7 +176,7 @@ module.exports = function authRoutes({ sendReset, notifications }) {
     if (!user) throw fail(400, 'This reset link is invalid or expired.');
     await notifications.account(user, 'password', String(user.authVersion));
     await sessionCall(req, 'destroy');
-    res.clearCookie('airbnb.sid');
+    res.clearCookie('stays.sid');
     res.redirect(303, '/login');
   });
   router.get('/account', requireUser, (req, res) =>
@@ -218,7 +218,7 @@ module.exports = function authRoutes({ sendReset, notifications }) {
     );
     await notifications.account(user, 'password', String(user.authVersion + 1));
     await sessionCall(req, 'destroy');
-    res.clearCookie('airbnb.sid');
+    res.clearCookie('stays.sid');
     res.redirect(303, '/login');
   });
   return router;

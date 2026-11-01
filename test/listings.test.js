@@ -116,7 +116,7 @@ test(
       await replica.stop();
     });
     await mongoose.connect(replica.getUri(), {
-      dbName: 'airbnb_isolated_tests',
+      dbName: 'stays_isolated_tests',
     });
     await initializeModels();
     const sent = [];
