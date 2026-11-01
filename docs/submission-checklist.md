@@ -57,3 +57,12 @@ Provider adapter/callback automation uses a mocked provider. An actual gateway t
 - Exercise the Upcoming/Past/Cancelled trip tabs and their empty states.
 - Verify room-count steppers, character counts, amenity selections and cover previews in the property editor.
 - Check phone-width search, calendar, property, checkout, trip and account views, including fixed bottom navigation and reserve controls.
+
+## Email acceptance
+
+- Add the Gmail App Password privately and pass npm run mail-check.
+- Restart the app and register with a mailbox you control; verify welcome, login and profile/security messages.
+- Exercise forgot-password and confirm expired/reused reset links are rejected.
+- Complete/cancel a future reservation and check guest/host messages and payment status wording.
+- Inspect npm run mail-status for pending/failed mail without exposing message contents.
+- Confirm generated community identities receive no email. Account deletion has no live flow yet.

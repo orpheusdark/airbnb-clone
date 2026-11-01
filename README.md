@@ -170,3 +170,7 @@ Reference: https://razorpay.com/docs/payments/payments/test-card-details/
 ## Optional property collection
 
 Run npm run seed-community to add 18 properties across six hosts, eight guest accounts and 54 review entries with completed-stay records. All new app accounts use @duck.com addresses; this command does not create mailboxes or send messages. Account access details are generated once into the ignored .local/community-accounts.json file. Keep that file private. Repeating the command preserves edited listings, passwords and existing records. An email already owned by another account stops the import before any account is changed. The import adds historical records with no payment collected and does not create provider transactions. Licensed photographs are bundled locally; sources are recorded in the image credits.
+
+## Email notifications
+
+Account creation, successful sign-in, profile/password updates and reservation confirmation/cancellation/refund events can send email through Gmail SMTP. Follow the [Gmail setup guide](docs/email-setup.md), add the sender App Password to the private environment file, run npm run mail-check and restart the server. Queue counts are available with npm run mail-status. Notifications use saved retries and booking event deduplication; SMTP credentials and reset links are never stored in the notification queue. Imported community identities are excluded from delivery. Account deletion is not currently implemented.

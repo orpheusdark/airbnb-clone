@@ -239,3 +239,7 @@ Treat generated content as fixtures in source documentation, even when the inter
 ### Payment popups and browser isolation
 
 The default same-origin opener policy can sever communication with a cross-origin authentication popup. Apply same-origin-allow-popups to the checkout response when that channel is required, retaining the default on other pages. This is a compatibility correction, not evidence that a specific provider failure had that cause. Preserve signature and amount verification regardless of browser behavior, and distinguish an order or created payment from an actual captured transaction.
+
+### 1 November 2026 — SMTP and reliable notification boundaries
+
+Google-hosted university accounts can use Gmail SMTP only when their account policy permits the required credentials. Check public MX records to choose the provider; MX records do not prove App Password access is enabled. Use an App Password with TLS and never a normal account password. An SMTP authentication check sends no mail, and SMTP acceptance is not an inbox delivery receipt. Keep password-reset tokens in the direct recovery flow, with only a digest in the account record, rather than copying readable reset links into a durable queue. Suppress generated mailbox identities. Deduplicate booking event enqueueing, retry delivery independently from reservation success and document at-least-once delivery and the business-commit/queue boundary. Quota control must become shared before running multiple workers on different instances.

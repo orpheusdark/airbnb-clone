@@ -11,7 +11,7 @@ const {
   fail,
   requireUser,
 } = require('../lib/security');
-module.exports = function authRoutes({ sendReset }) {
+module.exports = function authRoutes({ sendReset, notifications }) {
   const router = express.Router();
   const limit = rateLimit({
     windowMs: 15 * 60000,
@@ -64,7 +64,9 @@ module.exports = function authRoutes({ sendReset }) {
         ...values,
         passwordHash: await hashPassword(req.body.password),
       });
-      res.redirect(303, await signIn(req, user));
+      const destination = await signIn(req, user);
+      await notifications.account(user, 'welcome', String(user._id));
+      res.redirect(303, destination);
     } catch (error) {
       if (error.code === 11000)
         return render(
@@ -99,7 +101,9 @@ module.exports = function authRoutes({ sendReset }) {
         values,
         401,
       );
-    res.redirect(303, await signIn(req, user));
+    const destination = await signIn(req, user);
+    await notifications.account(user, 'login');
+    res.redirect(303, destination);
   });
   router.post('/logout', async (req, res) => {
     await sessionCall(req, 'destroy');
@@ -127,7 +131,12 @@ module.exports = function authRoutes({ sendReset }) {
       user.resetHash = digest(token);
       user.resetExpires = new Date(Date.now() + 30 * 60000);
       await user.save();
-      await sendReset(user.email, token);
+      try {
+        await sendReset(user.email, token);
+      } catch {
+        await User.updateOne({ _id: user._id, resetHash: digest(token) }, { $unset: { resetHash: '', resetExpires: '' } });
+        throw fail(503, 'The recovery email could not be sent. Please try again shortly.');
+      }
     }
     res.render('message', {
       title: 'Check your email',
@@ -165,6 +174,7 @@ module.exports = function authRoutes({ sendReset }) {
       { returnDocument: 'after' },
     );
     if (!user) throw fail(400, 'This reset link is invalid or expired.');
+    await notifications.account(user, 'password', String(user.authVersion));
     await sessionCall(req, 'destroy');
     res.clearCookie('airbnb.sid');
     res.redirect(303, '/login');
@@ -183,6 +193,7 @@ module.exports = function authRoutes({ sendReset }) {
         400,
       );
     await User.updateOne({ _id: req.user._id }, { $set: { name } });
+    await notifications.account(req.user, 'profile');
     res.redirect(303, '/account?notice=profile');
   });
   router.post('/account/password', requireUser, limit, async (req, res) => {
@@ -205,6 +216,7 @@ module.exports = function authRoutes({ sendReset }) {
         $inc: { authVersion: 1 },
       },
     );
+    await notifications.account(user, 'password', String(user.authVersion + 1));
     await sessionCall(req, 'destroy');
     res.clearCookie('airbnb.sid');
     res.redirect(303, '/login');

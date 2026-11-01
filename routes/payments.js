@@ -4,7 +4,7 @@ const Booking = require('../models/booking');
 const Listing = require('../models/listing');
 const { quote, available, reserve } = require('../lib/booking');
 const { requireUser, fail } = require('../lib/security');
-module.exports = function paymentRoutes(gateway) {
+module.exports = function paymentRoutes(gateway, notifications) {
   const router = express.Router();
   router.post('/payments/order', requireUser, async (req, res) => {
     if (!gateway)
@@ -61,7 +61,11 @@ module.exports = function paymentRoutes(gateway) {
         });
       }
     }
-    if (attempt.booking) return res.redirect(303, '/trips/' + attempt.booking);
+    if (attempt.booking) {
+      const existing = await Booking.findById(attempt.booking);
+      if (existing) await notifications.booking(existing, 'confirmed');
+      return res.redirect(303, '/trips/' + attempt.booking);
+    }
     if (attempt.state === 'refunded')
       throw fail(
         409,
@@ -129,7 +133,11 @@ module.exports = function paymentRoutes(gateway) {
       )
     )
       throw fail(400, 'The payment could not be verified.');
-    if (attempt.booking) return res.redirect(303, '/trips/' + attempt.booking);
+    if (attempt.booking) {
+      const existing = await Booking.findById(attempt.booking);
+      if (existing) await notifications.booking(existing, 'confirmed');
+      return res.redirect(303, '/trips/' + attempt.booking);
+    }
     if (attempt.state === 'refunded')
       throw fail(
         409,
@@ -178,6 +186,7 @@ module.exports = function paymentRoutes(gateway) {
             $unset: { lockUntil: '' },
           },
         );
+        await notifications.booking(existing, 'confirmed');
         return res.redirect(303, '/trips/' + existing._id);
       }
       const payment = await gateway.verifyCaptured(
@@ -228,6 +237,7 @@ module.exports = function paymentRoutes(gateway) {
           $unset: { lockUntil: '' },
         },
       );
+      await notifications.booking(booking, 'confirmed');
       return res.redirect(303, '/trips/' + booking._id + '?notice=booked');
     } catch (error) {
       // Never refund a reservation that was committed before a later database/network failure.
@@ -236,7 +246,10 @@ module.exports = function paymentRoutes(gateway) {
         requestKey: attempt.requestKey,
         paymentId: attempt.paymentId,
       });
-      if (committed) return res.redirect(303, '/trips/' + committed._id);
+      if (committed) {
+        await notifications.booking(committed, 'confirmed');
+        return res.redirect(303, '/trips/' + committed._id);
+      }
       if (captured) {
         try {
           await gateway.refund(

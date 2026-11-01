@@ -120,9 +120,11 @@ test(
     });
     await initializeModels();
     const sent = [];
+    const accountEvents = [], bookingEvents = [];
     app = createApp({
       gateway: null,
       secret: 'test-only-session-secret-with-at-least-32-characters',
+      notifications: { account: async (user, event) => { accountEvents.push({ id: String(user._id), event }); }, booking: async (booking, event) => { bookingEvents.push({ id: String(booking._id), event }); } },
       sendReset: async (email, token) => {
         sent.push({ email, token });
       },
@@ -1042,6 +1044,74 @@ test(
         assert.equal(stay.paymentId, undefined);
         assert.equal(await Night.countDocuments({ booking: stay._id }), stay.nights);
       }
+    });
+    await t.test('email queue retries, deduplicates events and suppresses imported identities', async () => {
+      const Email = require('../models/email');
+      const { createMailService, smtpTransport } = require('../lib/mail');
+      assert.equal(smtpTransport({}), null);
+      const messages = [];
+      let failNext = true;
+      const env = { APP_URL: 'http://localhost:3000', MAIL_FROM: 'Stays <sender@example.test>', MAIL_DAILY_LIMIT: '10' };
+      const mailer = createMailService(env, { async sendMail(message) { if (failNext) { failNext = false; throw Error('private-SMTP-error'); } messages.push(message); return { accepted: [message.to], rejected: [] }; }, close() {} });
+      const user = await User.create({ name: '<b>Guest</b>', email: 'notifications@example.test', passwordHash: await hashPassword(password) });
+      await mailer.notifications.account(user, 'welcome', 'once');
+      await mailer.notifications.account(user, 'welcome', 'once');
+      assert.equal(await Email.countDocuments(), 1);
+      await mailer.processPending();
+      let pending = await Email.findOne({ user: user._id });
+      assert.equal(pending.state, 'pending');
+      assert.equal(pending.attempts, 1);
+      assert.ok(pending.nextAttempt > new Date());
+      assert.ok(!JSON.stringify(pending).includes('private-SMTP-error'));
+      await Email.updateOne({ _id: pending._id }, { $set: { nextAttempt: new Date(0) } });
+      await Promise.all([mailer.processPending(), mailer.processPending()]);
+      assert.equal(messages.length, 1);
+      assert.equal((await Email.findById(pending._id)).state, 'sent');
+      assert.ok(messages[0].html.includes('&lt;b&gt;Guest&lt;/b&gt;'));
+      assert.ok(!messages[0].html.includes('<b>Guest</b>'));
+      const imported = await User.findOne({ seedKey: /^community-v1-/ });
+      await mailer.notifications.account(imported, 'login', 'skip');
+      await mailer.sendReset(imported.email, 'a'.repeat(64));
+      assert.equal(await Email.countDocuments(), 1);
+      assert.equal(messages.length, 1);
+      const host = await User.findOne({ email: 'host@example.test' });
+      const snapshot = { _id: new mongoose.Types.ObjectId(), guest: user._id, host: host._id, title: 'A private stay', location: 'Ooty', checkIn: day(10), checkOut: day(12), guests: 2, nights: 2, totalPaise: 200000, payment: 'test-paid', status: 'confirmed' };
+      await mailer.notifications.booking(snapshot, 'confirmed');
+      await mailer.notifications.booking(snapshot, 'confirmed');
+      assert.equal(await Email.countDocuments(), 3);
+      await mailer.processPending();
+      assert.equal(messages.length, 3);
+      assert.ok(messages.some((message) => message.to === host.email && message.text.includes('/host')));
+      assert.ok(messages.some((message) => message.to === user.email && message.text.includes('/trips/' + snapshot._id)));
+      await mailer.sendReset(user.email, 'a'.repeat(64));
+      assert.equal(messages.length, 4);
+      assert.equal(await Email.countDocuments(), 3);
+      assert.ok(messages[3].text.includes('/reset-password/'));
+      await mailer.notifications.account(user, 'profile', 'later');
+      const capped = createMailService({ ...env, MAIL_DAILY_LIMIT: '1' }, { async sendMail() { assert.fail('Daily cap exceeded'); }, close() {} });
+      await capped.processPending();
+      assert.equal(await Email.countDocuments({ state: 'pending' }), 1);
+      capped.close(); mailer.close();
+      const failingApp = createApp({ gateway: null, secret: 'test-only-session-secret-with-at-least-32-characters', disableRateLimit: true, sendReset: async () => { throw Error('private-mail-error'); } });
+      const failingServer = failingApp.listen(0, '127.0.0.1');
+      await new Promise((resolve) => failingServer.once('listening', resolve));
+      try {
+        const recovery = browser(`http://127.0.0.1:${failingServer.address().port}`);
+        await recovery.get('/forgot-password');
+        const failed = await recovery.post('/forgot-password', { email: user.email });
+        assert.equal(failed.status, 503);
+        assert.ok(!failed.html.includes('private-mail-error'));
+        assert.equal((await User.findById(user._id).select('+resetHash')).resetHash, undefined);
+      } finally {
+        await new Promise((resolve) => failingServer.close(resolve));
+        await failingApp.locals.sessionStore.close();
+      }
+      assert.ok(accountEvents.some((event) => event.event === 'welcome'));
+      assert.ok(accountEvents.some((event) => event.event === 'login'));
+      assert.ok(accountEvents.some((event) => event.event === 'profile'));
+      assert.ok(accountEvents.some((event) => event.event === 'password'));
+      assert.ok(bookingEvents.some((event) => event.event === 'confirmed'));
+      assert.ok(bookingEvents.some((event) => event.event === 'cancelled'));
     });
   },
 );

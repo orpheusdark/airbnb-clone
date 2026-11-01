@@ -16,7 +16,7 @@ const {
 } = require('../validation/listing');
 const { fail, requireUser, owns, objectId } = require('../lib/security');
 const { quote, today, available, reserve, cancel } = require('../lib/booking');
-module.exports = function stayRoutes({ csrf, gateway }) {
+module.exports = function stayRoutes({ csrf, gateway, notifications }) {
   const router = express.Router();
   async function listingRatings(listings) {
     const ratings = await Review.aggregate([
@@ -408,6 +408,7 @@ module.exports = function stayRoutes({ csrf, gateway }) {
         'Please use the secure payment checkout to confirm this reservation.',
       );
     const booking = await reserve(req.user, input.listingId, input, key);
+    await notifications.booking(booking, 'confirmed');
     res.redirect(303, `/trips/${booking._id}?notice=booked`);
   });
   router.get('/trips', requireUser, async (req, res) => {
@@ -439,6 +440,7 @@ module.exports = function stayRoutes({ csrf, gateway }) {
     ownBooking,
     async (req, res) => {
       const booking = await cancel(req.user, req.params.bookingId);
+      await notifications.booking(booking, 'cancelled');
       if (booking.payment === 'refund-pending') {
         if (!gateway)
           throw fail(
@@ -461,6 +463,10 @@ module.exports = function stayRoutes({ csrf, gateway }) {
             'Your reservation is cancelled. Payment reversal is pending; retry cancellation shortly.',
           );
         }
+      }
+      if (booking.payment === 'refund-pending') {
+        booking.payment = 'test-refunded';
+        await notifications.booking(booking, 'refunded');
       }
       res.redirect(303, `/trips/${req.params.bookingId}?notice=cancelled`);
     },

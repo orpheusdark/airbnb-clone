@@ -7,7 +7,8 @@ const session = require('express-session');
 const MongoStore = require('connect-mongo').default;
 const helmet = require('helmet');
 const { rateLimit } = require('express-rate-limit');
-const nodemailer = require('nodemailer');
+const { createMailService } = require('./lib/mail');
+const Email = require('./models/email');
 const User = require('./models/user');
 const Listing = require('./models/listing');
 const Booking = require('./models/booking');
@@ -186,9 +187,10 @@ function createApp(options = {}) {
           }),
       }),
     );
-  app.use(require('./routes/auth')({ sendReset: options.sendReset }));
-  app.use(require('./routes/payments')(gateway));
-  app.use(require('./routes/stays')({ csrf, gateway }));
+  const notifications = options.notifications || { account: async () => {}, booking: async () => {} };
+  app.use(require('./routes/auth')({ sendReset: options.sendReset, notifications }));
+  app.use(require('./routes/payments')(gateway, notifications));
+  app.use(require('./routes/stays')({ csrf, gateway, notifications }));
   app.use((req, res) =>
     res.status(404).render('error', {
       statusCode: 404,
@@ -234,30 +236,8 @@ function createApp(options = {}) {
 }
 async function initializeModels() {
   // Unique indexes must be ready before reservations and account creation are accepted.
-  for (const model of [User, Listing, Booking, Night, Review, Image, Attempt])
+  for (const model of [User, Listing, Booking, Night, Review, Image, Attempt, Email])
     await model.init();
-}
-function resetMailer() {
-  if (!process.env.SMTP_HOST || !process.env.MAIL_FROM || !process.env.APP_URL)
-    return undefined;
-  const base = new URL(process.env.APP_URL);
-  if (process.env.NODE_ENV === 'production' && base.protocol !== 'https:')
-    throw Error('APP_URL must use HTTPS.');
-  const transport = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT || 587),
-    secure: process.env.SMTP_PORT === '465',
-    auth: process.env.SMTP_USER
-      ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASSWORD }
-      : undefined,
-  });
-  return (email, token) =>
-    transport.sendMail({
-      from: process.env.MAIL_FROM,
-      to: email,
-      subject: 'Reset your Airbnb Clone password',
-      text: `Reset your password within 30 minutes: ${new URL('/reset-password/' + token, base).href}\nIf you did not request this, ignore this message.`,
-    });
 }
 async function startServer() {
   if (!process.env.MONGODB_URI) throw Error('Set MONGODB_URI before starting.');
@@ -265,11 +245,14 @@ async function startServer() {
     serverSelectionTimeoutMS: 10000,
   });
   await initializeModels();
-  const app = createApp({ sendReset: resetMailer() });
+  const mailer = createMailService();
+  const app = createApp({ sendReset: mailer?.sendReset, notifications: mailer?.notifications });
   const server = app.listen(process.env.PORT || 3000, () =>
     console.log('Airbnb Clone is running.'),
   );
+  mailer?.start();
   server.on('error', async () => {
+    mailer?.close();
     console.error('Unable to start the HTTP server.');
     await mongoose.disconnect();
     process.exitCode = 1;
@@ -277,6 +260,7 @@ async function startServer() {
   for (const signal of ['SIGINT', 'SIGTERM'])
     process.once(signal, () =>
       server.close(async () => {
+        mailer?.close();
         await app.locals.sessionStore.close();
         await mongoose.disconnect();
       }),

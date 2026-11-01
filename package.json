@@ -9,7 +9,9 @@
     "test": "node --test",
     "assign-listings": "node scripts/assign-listings.js",
     "seed": "node scripts/seed.js",
-    "seed-community": "node scripts/seed-community.js"
+    "seed-community": "node scripts/seed-community.js",
+    "mail-check": "node scripts/check-mail.js",
+    "mail-status": "node scripts/mail-status.js"
   },
   "keywords": [],
   "author": "",
