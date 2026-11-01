@@ -316,3 +316,5 @@ Verified the earlier Razorpay sandbox capture of INR 325500 against the exact st
 ### 1 November 2026 — Gmail SMTP authentication verified
 
 After the sender credentials were entered privately, npm run mail-check successfully connected and authenticated with Google SMTP. The check sent no message and printed no credentials. Inbox delivery still requires exercising an account or booking notification and checking the recipient mailbox. The configured sender and password remain only in the ignored environment file.
+
+Email activation check: SMTP authentication succeeded, but the application restart was blocked by MongooseServerSelectionError / ReplicaSetNoPrimary. All database nodes returned MongoNetworkError with TLS alert ERR_SSL_TLSV1_ALERT_INTERNAL_ERROR. No credentials were printed and no TLS verification was disabled. The database network/TLS connection must be restored before the email worker and application can run. Successful SMTP authentication has not yet been followed by an inbox-delivery check.
