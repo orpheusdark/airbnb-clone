@@ -1,5 +1,7 @@
 # Stays
 
+[Open Stays](https://stays-blush.vercel.app)
+
 A full-stack accommodation booking platform with guest accounts, property hosting, availability search, reservations, reviews and secure checkout integration. Built with **Node.js, Express, MongoDB, Mongoose, EJS and custom HTML/CSS**.
 
 ![Stays](public/stays-logo.png)

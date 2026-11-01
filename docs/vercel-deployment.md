@@ -40,3 +40,7 @@ The deployment ignore file excludes environment files, private account exports, 
 Atlas must permit the deployment's outbound connection. If the network access policy blocks the function, choose an appropriate access rule or a hosting/static-egress arrangement explicitly; the application does not broaden database network access automatically.
 
 References: [Express on Vercel](https://vercel.com/docs/frameworks/backend/express), [function limits](https://vercel.com/docs/functions/limitations), [background tasks](https://vercel.com/docs/functions/functions-api-reference/vercel-functions-package), [cron plan limits](https://vercel.com/docs/cron-jobs/usage-and-pricing).
+
+## Verified production release
+
+Public origin: https://stays-blush.vercel.app. The production health endpoint, database-backed pages, assets, Secure/HttpOnly sessions, CSRF rejection, protected account routes and blocked environment-file paths were verified on 1 November 2026. Provider email inbox delivery and a new cloud-initiated Razorpay transaction were not claimed by these public smoke checks. The previous sandbox transaction remains independently verified in the application history.
