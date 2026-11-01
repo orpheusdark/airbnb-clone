@@ -6,3 +6,7 @@ node_modules/
 npm-debug.log*
 coverage/
 .local/
+.vercel/
+.vercel
+.env*
+!.env.example

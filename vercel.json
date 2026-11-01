@@ -1,0 +1,16 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "express",
+  "functions": {
+    "app.js": {
+      "includeFiles": "views/**",
+      "maxDuration": 120
+    }
+  },
+  "crons": [
+    {
+      "path": "/internal/email-jobs",
+      "schedule": "0 5 * * *"
+    }
+  ]
+}

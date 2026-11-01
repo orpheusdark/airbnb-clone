@@ -345,10 +345,10 @@ if (upload) {
     upload.setCustomValidity('');
     if (!file) return;
     if (
-      file.size > 5 * 1024 * 1024 ||
+      file.size > 4 * 1024 * 1024 ||
       !['image/jpeg', 'image/png', 'image/webp'].includes(file.type)
     ) {
-      upload.setCustomValidity('Choose a JPEG, PNG or WebP photo up to 5 MB.');
+      upload.setCustomValidity('Choose a JPEG, PNG or WebP photo up to 4 MB.');
       upload.reportValidity();
       return;
     }

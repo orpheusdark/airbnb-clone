@@ -217,7 +217,7 @@ module.exports = function stayRoutes({ csrf, gateway, notifications }) {
   });
   const upload = multer({
     storage: multer.memoryStorage(),
-    limits: { fileSize: 5 * 1024 * 1024, files: 1, fields: 2, parts: 3 },
+    limits: { fileSize: 4 * 1024 * 1024, files: 1, fields: 2, parts: 3 },
   });
   router.post(
     '/listings/:id/image',
@@ -246,7 +246,7 @@ module.exports = function stayRoutes({ csrf, gateway, notifications }) {
       if (!mime)
         throw fail(
           400,
-          'Upload a JPEG, PNG or WebP image no larger than 5 MB.',
+          'Upload a JPEG, PNG or WebP image no larger than 4 MB.',
         );
       await mongoose.connection.transaction(async (session) => {
         const image = await Image.findOneAndUpdate(

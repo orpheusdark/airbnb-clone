@@ -117,7 +117,7 @@ npm run seed -- --email YOUR_ACCOUNT_EMAIL
 
 ## Photos
 
-Upload a JPEG, PNG or WebP cover photo of up to 5 MB from the property edit page, or supply an external HTTP/HTTPS URL. Add up to four additional image URLs to build a five-photo gallery. Uploads are checked by file signature and stored in MongoDB. Leaving the URL blank during editing keeps the existing photo. The property-type image option selects a bundled photograph.
+Upload a JPEG, PNG or WebP cover photo of up to 4 MB from the property edit page, or supply an external HTTP/HTTPS URL. Add up to four additional image URLs to build a five-photo gallery. Uploads are checked by file signature and stored in MongoDB. Leaving the URL blank during editing keeps the existing photo. The property-type image option selects a bundled photograph.
 
 Bundled photographs are stored under `public/images/stays/` and remain available without an external image request. See [image credits](docs/image-credits.md) for sources and licensing.
 
@@ -176,3 +176,7 @@ Run npm run seed-community to add 18 properties across six hosts, eight guest ac
 Account creation, successful sign-in, profile/password updates and reservation confirmation/cancellation/refund events can send email through Gmail SMTP. Follow the [Gmail setup guide](docs/email-setup.md), add the sender App Password to the private environment file, run npm run mail-check and restart the server. Queue counts are available with npm run mail-status. Notifications use saved retries and booking event deduplication; SMTP credentials and reset links are never stored in the notification queue. Imported community identities are excluded from delivery. Account deletion requires the current password and typed confirmation, blocks active/upcoming stays and pending refunds, removes profile/review data, archives owned properties and revokes all sessions. Reservation/payment history remains linked to an anonymised account reference; a closure confirmation is queued to the original mailbox.
 
 To inspect application records in Atlas, follow the [database explorer guide](docs/database-explorer.md). The existing live database is named test; the public Stays name is independent of database and repository names.
+
+## Vercel deployment
+
+The repository includes a Vercel Express entry point, cached MongoDB initialization, bundled EJS templates, 4 MiB uploads and request-lifetime email processing with a protected daily retry job. Follow the [Vercel deployment guide](docs/vercel-deployment.md) for environment settings, limits and acceptance checks. GitHub deployments use the production branch master. Private environment files and generated account credentials are excluded from deployment uploads.

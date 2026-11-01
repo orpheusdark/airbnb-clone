@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { listen } = require('../app');
+const { listen } = require('../lib/application');
 
 test('startup rejects an occupied port instead of announcing a successful listener', async (t) => {
   const server = await listen((req, res) => res.end('Stays'), 0, '127.0.0.1');

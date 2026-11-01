@@ -11,7 +11,8 @@
     "seed": "node scripts/seed.js",
     "seed-community": "node scripts/seed-community.js",
     "mail-check": "node scripts/check-mail.js",
-    "mail-status": "node scripts/mail-status.js"
+    "mail-status": "node scripts/mail-status.js",
+    "vercel-build": "node scripts/build-views.js"
   },
   "keywords": [],
   "author": "",
@@ -22,6 +23,7 @@
     "nodemon": "^3.1.14"
   },
   "dependencies": {
+    "@vercel/functions": "^3.10.5",
     "connect-mongo": "^6.0.0",
     "dotenv": "^18.0.8",
     "ejs": "^7.0.2",
@@ -34,6 +36,12 @@
     "nodemailer": "^10.2.1"
   },
   "engines": {
-    "node": ">=20.19.0"
+    "node": "24.x"
+  },
+  "overrides": {
+    "zod": "^4.6.7",
+    "nodemon": {
+      "minimatch": "^11.0.3"
+    }
   }
 }

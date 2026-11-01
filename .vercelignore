@@ -1,0 +1,15 @@
+.env
+.env.*
+*.env
+.local
+.git
+.vercel
+node_modules
+test
+docs
+community-work
+stays-work
+mail-work
+vercel-work
+coverage
+*.log
