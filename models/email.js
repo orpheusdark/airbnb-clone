@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const schema = new mongoose.Schema({
   key: { type: String, required: true, unique: true },
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  purpose: { type: String, enum: ['notification', 'account-closed'], default: 'notification' },
   to: { type: String, required: true },
   subject: { type: String, required: true },
   text: { type: String, required: true },

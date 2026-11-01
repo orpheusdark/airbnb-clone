@@ -66,3 +66,6 @@ Provider adapter/callback automation uses a mocked provider. An actual gateway t
 - Complete/cancel a future reservation and check guest/host messages and payment status wording.
 - Inspect npm run mail-status for pending/failed mail without exposing message contents.
 - Confirm generated community identities receive no email. Account deletion has no live flow yet.
+
+- Verify an email link with the correct account, then confirm that replay, expiry and another account are rejected.
+- Check the Stays navbar logo, favicon, page titles, authentication screens and Razorpay merchant name.

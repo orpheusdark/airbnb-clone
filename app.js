@@ -29,6 +29,8 @@ const notices = {
   cancelled: 'Your reservation has been cancelled.',
   reviewed: 'Your review has been updated.',
   profile: 'Your profile has been updated.',
+  verificationSent: 'A verification link has been sent to your email address.',
+  verified: 'Your email address is verified.',
 };
 function createApp(options = {}) {
   const app = express();
@@ -77,6 +79,7 @@ function createApp(options = {}) {
       ttl: 7 * 86400,
     });
   app.locals.sessionStore = store;
+  store.on?.('error', () => console.error('Session storage is unavailable.'));
   app.use(
     session({
       name: 'stays.sid',
@@ -110,6 +113,7 @@ function createApp(options = {}) {
     res.locals.notice = '';
     res.locals.csrfToken = '';
     res.locals.paymentEnabled = !!gateway;
+    res.locals.emailVerificationEnabled = !!options.sendVerification;
     res.locals.photoFor = require('./lib/photos').photoFor;
     res.locals.galleryFor = require('./lib/photos').galleryFor;
     res.locals.currentPath = req.path;
@@ -149,7 +153,7 @@ function createApp(options = {}) {
     res.locals.csrfToken = req.session.csrf;
     if (req.session.userId) {
       const user = await User.findById(req.session.userId);
-      if (user && user.authVersion === req.session.authVersion) req.user = user;
+      if (user && !user.deletedAt && user.authVersion === req.session.authVersion) req.user = user;
       else {
         delete req.session.userId;
         delete req.session.authVersion;
@@ -162,6 +166,7 @@ function createApp(options = {}) {
       Object.hasOwn(notices, req.query.notice)
         ? notices[req.query.notice]
         : '';
+    if (req.query.notice === 'verified' && !req.user?.emailVerifiedAt) res.locals.notice = '';
     if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
       // Multipart forms are checked after the bounded upload parser, inside the owner-only route.
       if (
@@ -188,7 +193,7 @@ function createApp(options = {}) {
       }),
     );
   const notifications = options.notifications || { account: async () => {}, booking: async () => {} };
-  app.use(require('./routes/auth')({ sendReset: options.sendReset, notifications }));
+  app.use(require('./routes/auth')({ sendReset: options.sendReset, sendVerification: options.sendVerification, notifications }));
   app.use(require('./routes/payments')(gateway, notifications));
   app.use(require('./routes/stays')({ csrf, gateway, notifications }));
   app.use((req, res) =>
@@ -239,6 +244,15 @@ async function initializeModels() {
   for (const model of [User, Listing, Booking, Night, Review, Image, Attempt, Email])
     await model.init();
 }
+async function listen(app, port, host) {
+  const server = require('node:http').createServer(app);
+  await new Promise((resolve, reject) => {
+    const failed = (error) => reject(error);
+    server.once('error', failed);
+    server.listen(port, host, () => { server.removeListener('error', failed); resolve(); });
+  });
+  return server;
+}
 async function startServer() {
   if (!process.env.MONGODB_URI) throw Error('Set MONGODB_URI before starting.');
   await mongoose.connect(process.env.MONGODB_URI, {
@@ -246,10 +260,17 @@ async function startServer() {
   });
   await initializeModels();
   const mailer = createMailService();
-  const app = createApp({ sendReset: mailer?.sendReset, notifications: mailer?.notifications });
-  const server = app.listen(process.env.PORT || 3000, () =>
-    console.log('Stays is running.'),
-  );
+  const app = createApp({ sendReset: mailer?.sendReset, sendVerification: mailer?.sendVerification, notifications: mailer?.notifications });
+  let server;
+  try {
+    server = await listen(app, Number(process.env.PORT || 3000));
+  } catch (error) {
+    mailer?.close();
+    await app.locals.sessionStore.close().catch(() => {});
+    await mongoose.disconnect();
+    throw error;
+  }
+  console.log('Stays is running.');
   mailer?.start();
   server.on('error', async () => {
     mailer?.close();
@@ -268,11 +289,11 @@ async function startServer() {
   return server;
 }
 if (require.main === module)
-  startServer().catch(async () => {
+  startServer().catch(async (error) => {
     console.error(
-      'Startup failed. Check MongoDB availability and environment settings.',
+      error.code === 'EADDRINUSE' ? 'Startup failed: the selected port is already in use.' : 'Startup failed. Check MongoDB availability and environment settings.',
     );
     await mongoose.disconnect();
     process.exitCode = 1;
   });
-module.exports = { createApp, startServer, initializeModels };
+module.exports = { createApp, startServer, initializeModels, listen };

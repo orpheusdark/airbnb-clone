@@ -2,6 +2,7 @@ const express = require('express');
 const crypto = require('node:crypto');
 const { rateLimit } = require('express-rate-limit');
 const User = require('../models/user');
+const { closeAccount } = require('../lib/accounts');
 const {
   passwordValid,
   hashPassword,
@@ -11,7 +12,7 @@ const {
   fail,
   requireUser,
 } = require('../lib/security');
-module.exports = function authRoutes({ sendReset, notifications }) {
+module.exports = function authRoutes({ sendReset, sendVerification, notifications }) {
   const router = express.Router();
   const limit = rateLimit({
     windowMs: 15 * 60000,
@@ -182,6 +183,41 @@ module.exports = function authRoutes({ sendReset, notifications }) {
   router.get('/account', requireUser, (req, res) =>
     render(res, 'account', [], { name: req.user.name, email: req.user.email }),
   );
+  router.post('/account/verification', requireUser, limit, async (req, res) => {
+    if (!sendVerification) throw fail(503, 'Email verification is temporarily unavailable.');
+    if (req.user.emailVerifiedAt) return res.redirect(303, '/account?notice=verified');
+    try { await sendVerification(req.user._id); }
+    catch { throw fail(503, 'The verification email could not be sent. Please try again shortly.'); }
+    res.redirect(303, '/account?notice=verificationSent');
+  });
+  async function verificationUser(req) {
+    if (!/^[a-f0-9]{64}$/.test(req.params.token)) throw fail(400, 'This verification link is invalid or expired.');
+    const user = await User.findOne({ _id: req.user._id, deletedAt: null, verificationHash: digest(req.params.token), verificationExpires: { $gt: new Date() } });
+    if (!user) throw fail(400, 'This verification link is invalid or expired.');
+    return user;
+  }
+  router.get('/account/verify/:token', requireUser, async (req, res) => {
+    await verificationUser(req);
+    res.render('account-action', { mode: 'verify', token: req.params.token });
+  });
+  router.post('/account/verify/:token', requireUser, async (req, res) => {
+    await verificationUser(req);
+    const result = await User.updateOne({ _id: req.user._id, deletedAt: null, verificationHash: digest(req.params.token), verificationExpires: { $gt: new Date() } }, { $set: { emailVerifiedAt: new Date() }, $unset: { verificationHash: '', verificationExpires: '' } });
+    if (!result.modifiedCount) throw fail(400, 'This verification link is invalid or expired.');
+    res.redirect(303, '/account?notice=verified');
+  });
+  router.get('/account/delete', requireUser, (req, res) => res.render('account-action', { mode: 'delete' }));
+  router.post('/account/delete', requireUser, limit, async (req, res) => {
+    if (req.body.confirmation !== 'DELETE') throw fail(400, 'Type DELETE to confirm account deletion.');
+    const original = await closeAccount(req.user._id, req.body.password);
+    await notifications.closed?.(original);
+    await sessionCall(req, 'destroy');
+    res.clearCookie('stays.sid');
+    req.user = null;
+    res.locals.currentUser = null;
+    res.locals.csrfToken = '';
+    res.render('message', { title: 'Account deleted', message: 'Your Stays account has been closed and you have been signed out. Your profile and reviews were removed; reservation and payment history has been retained.' });
+  });
   router.post('/account', requireUser, async (req, res) => {
     const name = typeof req.body.name === 'string' ? req.body.name.trim() : '';
     if (!name || name.length > 80)

@@ -2,12 +2,12 @@
 
 A full-stack accommodation booking platform with guest accounts, property hosting, availability search, reservations, reviews and secure checkout integration. Built with **Node.js, Express, MongoDB, Mongoose, EJS and custom HTML/CSS**.
 
-![Homes and discovery interface](docs/screenshots/homes.jpg)
+![Stays](public/stays-logo.png)
 
 ## Features
 
 - Account registration, login/logout and persistent server sessions.
-- Profile management, password changes and expiring password recovery links.
+- Profile management, password changes, expiring password recovery and single-use email verification links.
 - Property creation and owner-authorized editing, removal and photo uploads.
 - Guest capacity, bedroom/bathroom counts, property categories and amenities.
 - Location/title search, price/type/guest/availability filters, sorting and pagination.
@@ -16,7 +16,7 @@ A full-stack accommodation booking platform with guest accounts, property hostin
 - Razorpay checkout, payment verification, repeat-submission protection and payment reversal handling.
 - Future reservation cancellation with immediate availability updates.
 - Verified-stay reviews with author-only updates/removal and average ratings.
-- Stays responsive design with a rounded search bar, account menu, photo-first cards and mobile navigation.
+- Responsive design with a rounded search bar, account menu, photo-first cards and mobile navigation.
 - Calendar date-range selection, guest steppers, filter dialogs and instant wishlist feedback.
 - Photo galleries with keyboard navigation, share links, live price previews and an embedded area map.
 - Consistent hosting, account, trip, editor, checkout and receipt interfaces with loading and error states.
@@ -158,7 +158,7 @@ See the [acceptance checklist](docs/submission-checklist.md) for a complete brow
 
 Configure HTTPS, a stable session secret, Atlas, the public application URL and SMTP. Set `NODE_ENV=production` and configure `TRUST_PROXY` only for the actual proxy topology. The application does not automatically publish a deployment.
 
-The current implementation uses per-process request rate limits. Multi-instance hosting requires a shared limiter and operational monitoring. Additional roadmap items include email verification, social login, messaging, administrative moderation and account/data-retention controls.
+The current implementation uses per-process request rate limits. Multi-instance hosting requires a shared limiter and operational monitoring. Optional extensions include social login, guest-host messaging, administrative moderation and shared limits for multi-instance hosting.
 
 ## Completing a Razorpay sandbox payment
 
@@ -173,4 +173,6 @@ Run npm run seed-community to add 18 properties across six hosts, eight guest ac
 
 ## Email notifications
 
-Account creation, successful sign-in, profile/password updates and reservation confirmation/cancellation/refund events can send email through Gmail SMTP. Follow the [Gmail setup guide](docs/email-setup.md), add the sender App Password to the private environment file, run npm run mail-check and restart the server. Queue counts are available with npm run mail-status. Notifications use saved retries and booking event deduplication; SMTP credentials and reset links are never stored in the notification queue. Imported community identities are excluded from delivery. Account deletion is not currently implemented.
+Account creation, successful sign-in, profile/password updates and reservation confirmation/cancellation/refund events can send email through Gmail SMTP. Follow the [Gmail setup guide](docs/email-setup.md), add the sender App Password to the private environment file, run npm run mail-check and restart the server. Queue counts are available with npm run mail-status. Notifications use saved retries and booking event deduplication; SMTP credentials and reset links are never stored in the notification queue. Imported community identities are excluded from delivery. Account deletion requires the current password and typed confirmation, blocks active/upcoming stays and pending refunds, removes profile/review data, archives owned properties and revokes all sessions. Reservation/payment history remains linked to an anonymised account reference; a closure confirmation is queued to the original mailbox.
+
+To inspect application records in Atlas, follow the [database explorer guide](docs/database-explorer.md). The existing live database is named test; the public Stays name is independent of database and repository names.

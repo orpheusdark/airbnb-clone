@@ -1104,7 +1104,7 @@ test(
         assert.equal((await User.findById(user._id).select('+resetHash')).resetHash, undefined);
       } finally {
         await new Promise((resolve) => failingServer.close(resolve));
-        await failingApp.locals.sessionStore.close();
+        // The fixture shares the main Mongo client; its owner closes it after all tests.
       }
       assert.ok(accountEvents.some((event) => event.event === 'welcome'));
       assert.ok(accountEvents.some((event) => event.event === 'login'));
@@ -1112,6 +1112,83 @@ test(
       assert.ok(accountEvents.some((event) => event.event === 'password'));
       assert.ok(bookingEvents.some((event) => event.event === 'confirmed'));
       assert.ok(bookingEvents.some((event) => event.event === 'cancelled'));
+    });
+    await t.test('verification links and account deletion enforce ownership, expiry and reservation safety', async () => {
+      const { createMailService } = require('../lib/mail');
+      const { closeAccount } = require('../lib/accounts');
+      const { reserve, cancel } = require('../lib/booking');
+      const Email = require('../models/email');
+      const delivered = [];
+      const mailer = createMailService({ APP_URL: 'http://localhost:3000', MAIL_FROM: 'Stays <sender@example.test>' }, { async sendMail(message) { delivered.push(message); return { rejected: [] }; }, close() {} });
+      const lifecycleApp = createApp({ gateway: null, secret: 'test-only-session-secret-with-at-least-32-characters', disableRateLimit: true, notifications: mailer.notifications, sendVerification: mailer.sendVerification });
+      const lifecycleServer = lifecycleApp.listen(0, '127.0.0.1');
+      await new Promise((resolve) => lifecycleServer.once('listening', resolve));
+      try {
+        const origin = `http://127.0.0.1:${lifecycleServer.address().port}`;
+        const owner = browser(origin), outsider = browser(origin), otherSession = browser(origin);
+        await signup(owner, 'Lifecycle Host', 'lifecycle@example.test');
+        await signup(outsider, 'Other Member', 'lifecycle-other@example.test');
+        let account = await owner.get('/account');
+        assert.match(account.html, /Send verification email/);
+        assert.match(account.html, /Stays home/);
+        assert.ok(!/airbnb/i.test(account.html));
+        const person = await User.findOne({ email: 'lifecycle@example.test' });
+        assert.equal((await owner.post('/account/verification')).status, 303);
+        let token = delivered.at(-1).text.match(/\/account\/verify\/([a-f0-9]{64})/)[1];
+        assert.equal((await outsider.get('/account/verify/' + token)).status, 400);
+        assert.equal((await owner.get('/account/verify/' + token)).status, 200);
+        assert.equal((await User.findById(person._id)).emailVerifiedAt, undefined);
+        await User.updateOne({ _id: person._id }, { $set: { verificationExpires: new Date(0) } });
+        assert.equal((await owner.post('/account/verify/' + token)).status, 400);
+        await owner.get('/account');
+        await owner.post('/account/verification');
+        token = delivered.at(-1).text.match(/\/account\/verify\/([a-f0-9]{64})/)[1];
+        assert.equal((await owner.post('/account/verify/' + token, {}, 'wrong')).status, 403);
+        assert.equal((await owner.post('/account/verify/' + token)).status, 303);
+        assert.ok((await User.findById(person._id)).emailVerifiedAt);
+        assert.equal((await owner.post('/account/verify/' + token)).status, 400);
+        assert.ok(!JSON.stringify(await Email.find()).includes(token));
+        await otherSession.get('/login');
+        await otherSession.post('/login', { email: person.email, password });
+        await owner.get('/account');
+        const created = await owner.post('/listings', { ...details, title: 'Lifecycle home', price: '100' });
+        assert.equal(created.status, 303);
+        const home = await Listing.findOne({ owner: person._id });
+        const other = await User.findOne({ email: 'lifecycle-other@example.test' });
+        const input = { checkIn: day(20), checkOut: day(21), guests: '1', totalPaise: 10000 };
+        const booked = await reserve(other, home._id, input, 'lifecycle-booking');
+        await owner.get('/account/delete');
+        assert.equal((await owner.post('/account/delete', { password, confirmation: 'NO' })).status, 400);
+        assert.equal((await owner.post('/account/delete', { password: 'incorrect', confirmation: 'DELETE' })).status, 400);
+        assert.equal((await owner.post('/account/delete', { password, confirmation: 'DELETE' })).status, 409);
+        await cancel(other, booked._id);
+        await Booking.updateOne({ _id: booked._id }, { $set: { payment: 'refund-pending' } });
+        assert.equal((await owner.post('/account/delete', { password, confirmation: 'DELETE' })).status, 409);
+        await Booking.updateOne({ _id: booked._id }, { $set: { payment: 'not-collected' } });
+        assert.equal((await owner.post('/account/delete', { password, confirmation: 'DELETE' }, 'wrong')).status, 403);
+        const closed = await owner.post('/account/delete', { password, confirmation: 'DELETE' });
+        assert.equal(closed.status, 200, closed.html);
+        const tombstone = await User.findById(person._id);
+        assert.ok(tombstone.deletedAt);
+        assert.equal(tombstone.name, 'Former member');
+        assert.equal((await Listing.findById(home._id)).archived, true);
+        assert.ok(await Booking.findById(booked._id));
+        assert.equal((await owner.get('/account')).status, 303);
+        assert.equal((await otherSession.get('/account')).status, 303);
+        await owner.get('/login');
+        assert.equal((await owner.post('/login', { email: person.email, password })).status, 401);
+        await mailer.processPending(); await mailer.processPending();
+        assert.ok(delivered.some((message) => message.to === person.email && message.subject === 'Your Stays account was deleted'));
+        const raceGuest = await User.create({ name: 'Race Guest', email: 'closure-race@example.test', passwordHash: await hashPassword(password) });
+        const raceHome = await Listing.create({ ...validateListing(details).data, owner: other._id });
+        const raceInput = { checkIn: day(30), checkOut: day(31), guests: '1', totalPaise: Math.round(raceHome.price * 100) };
+        const results = await Promise.allSettled([closeAccount(raceGuest._id, password), reserve(raceGuest, raceHome._id, raceInput, 'closure-race')]);
+        assert.equal(results.filter((result) => result.status === 'fulfilled').length, 1);
+      } finally {
+        mailer.close();
+        await new Promise((resolve) => lifecycleServer.close(resolve));
+        await lifecycleApp.locals.sessionStore.close();
+      }
     });
   },
 );

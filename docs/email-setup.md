@@ -31,9 +31,15 @@ Sign up with a mailbox you control, check its inbox/spam folder for the welcome 
 
 Password reset links expire after 30 minutes, are single-use, and are sent directly rather than saved as readable tokens in the notification queue. The link uses `APP_URL`, never the request's Host header. A localhost link only works on the machine running the application; set the public HTTPS origin when deployed.
 
+## Email verification and account deletion
+
+From Personal info, select Send verification email. Sign in as the same account, open the emailed link and confirm the address. Links expire in 30 minutes and can be used once. Viewing a link does not verify an account automatically. Email verification is available when SMTP is configured and does not retroactively block existing bookings.
+
+Review account deletion from Personal info. It requires the current password and typing DELETE. Active/upcoming reservations or pending refunds block closure. Closure removes profile details and authored reviews, archives properties, revokes sessions and resets recovery/verification tokens. Historical reservation/payment records are retained with an anonymised account reference. This is account closure with explicit record retention, not a promise to erase every historical business record.
+
 ## Notifications and delivery
 
-Implemented events: account creation, successful sign-in, profile updates, password changes/resets, reservation confirmation, cancellation and successful test-payment reversal. Login messages are sent after a successful sign-in, not after failed password attempts. No marketing email is sent. Account deletion is not currently an application feature and has no live email trigger.
+Implemented events: account creation, successful sign-in, profile updates, password changes/resets, reservation confirmation, cancellation and successful test-payment reversal. Login messages are sent after a successful sign-in, not after failed password attempts. No marketing email is sent. Account deletion sends one closure confirmation to the original mailbox; other queued messages are suppressed after closure.
 
 Notifications are saved in MongoDB and processed while the server is running, at most five per 30-second worker tick. Booking event keys prevent repeated callbacks from enqueuing duplicate guest/host messages. Failed delivery is retried with increasing delays, for up to five attempts. Failed rows remain available for investigation; terminal rows expire after 30 days. The application's default queue cap is 300 delivered notifications per rolling 24 hours. Password recovery sends directly and still counts towards Google's own sending limit.
 

@@ -248,3 +248,9 @@ Google-hosted university accounts can use Gmail SMTP only when their account pol
 
 Branding includes accessible labels, document titles, checkout merchant names, email copy and the favicon as well as the navbar. Vector assets keep a simple original mark crisp at small sizes. Changing the session cookie name starts a fresh login session; changing a displayed brand does not require moving the database or rewriting the Git remote.
 
+
+### Account lifecycle and transaction boundaries
+
+A verification email should contain an expiring random token while the database stores only its digest. Viewing a GET link must not consume it; require the correct signed-in account and a CSRF-protected confirmation POST. Account deletion must serialize with checkout using a write to the same user document, or a booking already past middleware authentication could be committed after closure. Archive listings and preserve financial history with an anonymised reference while removing account/profile/review data. A closure email needs a narrowly scoped exception to normal post-closure suppression. Test fixture session stores can share the same Mongo client; only the fixture that owns that client should close it.
+
+Wait for the HTTP listening event before starting background workers. Starting a worker before a port-conflict failure can race MongoDB cleanup and produce misleading readiness output. A port-collision test should also verify that the original listener still serves requests after the second listener is rejected.

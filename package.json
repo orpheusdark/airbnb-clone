@@ -1,7 +1,7 @@
 {
   "name": "stays",
   "version": "1.0.0",
-  "description": "Full Stack Project - Stays",
+  "description": "Stays accommodation booking platform",
   "main": "app.js",
   "scripts": {
     "dev": "nodemon app.js",
