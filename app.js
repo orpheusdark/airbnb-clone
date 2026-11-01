@@ -79,6 +79,9 @@ function createApp(options = {}) {
       ttl: 7 * 86400,
     });
   app.locals.sessionStore = store;
+  // connect-mongo initializes its TTL index asynchronously; finish it before shutdown can close the shared client.
+  app.locals.sessionReady = store.collectionP || Promise.resolve();
+  app.locals.sessionReady.catch(() => console.error('Session storage initialization failed.'));
   store.on?.('error', () => console.error('Session storage is unavailable.'));
   app.use(
     session({
@@ -263,6 +266,7 @@ async function startServer() {
   const app = createApp({ sendReset: mailer?.sendReset, sendVerification: mailer?.sendVerification, notifications: mailer?.notifications });
   let server;
   try {
+    await app.locals.sessionReady;
     server = await listen(app, Number(process.env.PORT || 3000));
   } catch (error) {
     mailer?.close();
